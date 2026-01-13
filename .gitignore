@@ -1,0 +1,8 @@
+# Local testing folder for cloning repos and test files
+.test/
+
+# Output from pqc scans
+.work/
+
+# dev env
+.vscode/
