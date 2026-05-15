@@ -57,6 +57,16 @@ POST /rest/api/3/search/jql
 
 **Custom fields:** Jira instances vary. Use `GET /rest/api/3/field` to discover field IDs (Epic Link, Epic Name, etc.).
 
+**Attach file to issue:**
+
+```bash
+curl -s -u "${JIRA_EMAIL}:${JIRA_API_TOKEN}" \
+  -X POST \
+  -H "X-Atlassian-Token: no-check" \
+  -F "file=@/path/to/file" \
+  "${JIRA_HOST}/rest/api/3/issue/PROJ-123/attachments"
+```
+
 ## Keychain (macOS)
 
 Service `jira-api-token`, account = `JIRA_HOST` (URL). Use `-w "$VAR"` (not stdin); piping to `-w -` can store "-".

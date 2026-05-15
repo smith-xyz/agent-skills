@@ -16,3 +16,4 @@ Add an agent when you want a **separate context** (long transcripts, verificatio
 | `typescript-dev` | `typescript-patterns` | Non-React TS; use `react-dev` for UI |
 | `rust-dev` | `rust-patterns` | |
 | `openshift-debug` | `openshift-debug` | Readonly; cluster inspection |
+| `researcher` | — | Readonly; evidence gathering, no recommendations |

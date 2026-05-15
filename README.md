@@ -25,6 +25,8 @@ Personally curated commands, skills, and subagents for Cursor or Claude Code.
 | `scaffold` | New project from templates (`project-scaffold` skill) |
 | `work-review` | Summarize work from transcripts; optional Jira (`work-review` skill) |
 | `find-issues` | Find GitHub issues for OSS contribution (`gh`) |
+| `brainstorm` | Structured ideation with critical challenge; no implementation (`brainstorm` skill) |
+| `rebase` | Fetch and rebase onto upstream default branch (`git-workflow` skill) |
 | `reproduce-issue` | Reproduce a GitHub issue / build a test case (`gh`) |
 
 Stack and domain work (Go, React, Python, TypeScript, Rust, OpenShift) lives in **skills** and **subagents** (`/go-dev`, `/react-dev`, etc.), not duplicate slash commands.
