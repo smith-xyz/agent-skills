@@ -21,6 +21,13 @@ NS = {
     "arxiv": "http://arxiv.org/schemas/atom",
     "opensearch": "http://a9.com/-/spec/opensearch/1.1/",
 }
+FOCUS_PRESETS: dict[str, list[str]] = {
+    "context-files": ["context file", "AGENTS.md", "instruction following", "grounding"],
+    "agent-reliability": ["agent reliability", "tool use", "planning", "evaluation benchmark"],
+    "llm-security": ["LLM security", "prompt injection", "jailbreak", "adversarial"],
+    "rag": ["retrieval augmented generation", "RAG", "knowledge grounding"],
+    "code-generation": ["code generation", "program synthesis", "code completion"],
+}
 
 
 def build_search_query(
@@ -113,6 +120,12 @@ def main() -> int:
         help="Comma-separated arXiv categories (default: cs.AI,cs.LG,cs.CL)",
     )
     p.add_argument(
+        "--focus",
+        type=str,
+        default=None,
+        help="Focus preset (context-files, agent-reliability, llm-security, rag, code-generation) or freeform text",
+    )
+    p.add_argument(
         "keywords",
         nargs="*",
         help="Optional keywords (AND across all: fields)",
@@ -123,8 +136,15 @@ def main() -> int:
         print("error: need at least one category", file=sys.stderr)
         return 2
 
+    kw = list(args.keywords)
+    if args.focus:
+        if args.focus in FOCUS_PRESETS:
+            kw = FOCUS_PRESETS[args.focus]
+        else:
+            kw = [w for w in args.focus.split() if w.strip()]
+
     sq = build_search_query(
-        categories=cats, days=args.days, keywords=list(args.keywords)
+        categories=cats, days=args.days, keywords=kw
     )
     params = {
         "search_query": sq,

@@ -1,6 +1,7 @@
 ---
 name: work-review
-description: Review recent conversations and agent transcripts to summarize work accomplished
+description: Summarize recent work from agent transcripts and optional Jira mapping. Use when user asks for work review, weekly summary, or sync notes.
+disable-model-invocation: true
 ---
 
 # Work Review
@@ -20,22 +21,24 @@ Run from the work-review skill directory (execution location may vary).
 
 ## Parameters
 
-| Parameter | Default | Description                  |
-| --------- | ------- | ---------------------------- |
-| days      | 7       | Number of days to look back  |
-| max_words | 500     | Target word count for report |
+| Parameter | Default        | Description                  |
+| --------- | -------------- | ---------------------------- |
+| days      | 7              | Number of days to look back  |
+| max_words | 500            | Target word count for report |
+| style     | casual-bullets | Output style (see below)     |
 
-**Length:** `brief` / `short` / `email` → ~100–150 words; `standard` → ~500; `detailed` / `comprehensive` → ~1000+.
+**Style presets:**
 
-**Template:** `weekly-sync` / `sync` → Did/Doing; `weekly-email` / `summary email` → numbered list. When using those templates and Jira mapping is on, each entry leads with user story (key + summary) or "No user story".
+| Style | Format | Jira keys | Resource |
+| ----- | ------ | --------- | -------- |
+| `casual-bullets` (default) | Plain bullets, one sentence each, no bold/headers | Never | `resources/casual-bullets.md` |
+| `sync` | Did/Doing sections | When mapped | `resources/weekly-sync.md` |
+| `email` | Numbered list | When mapped | `resources/weekly-email.md` |
+| `standard` | Sections with detail | When mapped | `resources/standard.md` |
+| `brief` | ~100-150 words | When mapped | `resources/brief.md` |
+| `comprehensive` | ~1000+ words | When mapped | `resources/comprehensive.md` |
 
-**Output examples:** See `resources/` — use the file that matches the requested length/template:
-
-- `resources/weekly-sync.md` — standup/sync Did/Doing
-- `resources/weekly-email.md` — weekly summary email numbered list
-- `resources/brief.md` — short/email (~100–150 words)
-- `resources/standard.md` — standard (~500 words)
-- `resources/comprehensive.md` — detailed (~1000+ words)
+Parse style from user input: "casual" / "just bullets" / "no jira" / "highlights only" → `casual-bullets`; "sync" / "weekly sync" → `sync`; "email" → `email`; "detailed" / "comprehensive" → `comprehensive`.
 
 ## Workflow
 

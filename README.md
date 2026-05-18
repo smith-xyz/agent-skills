@@ -1,35 +1,50 @@
 # Cursor-Plugins
 
-Personally curated commands, skills, and subagents for Cursor or Claude Code.
+Personally curated skills and subagents for Cursor or Claude Code.
 
 ## Mental model
 
 | Layer | Use for |
 | ----- | ------- |
-| **Skills** (`skills/<name>/`) | Procedures, style, and stack conventions. Primary place for repeatable patterns and scripts. |
-| **Commands** (`commands/*.md`) | Slash playbooks with a **clear outcome** (scripts, `gh`, scaffold). Avoid duplicating full skill bodies here. |
-| **Agents** (`agents/*.md`) | Separate context, optional `readonly`. Point at skills so delegated work follows your conventions. |
+| Skills (`skills/<name>/`) | Workflows, conventions, and patterns. Invoke with `/skill-name` or let agent auto-apply. |
+| Agents (`agents/*.md`) | Separate context, optional `readonly`. Delegated work with their own context window. |
 
-**Flow:** Skills hold the substance; agents load those skills for bounded tasks; commands stay thin and outcome-focused.
+Skills hold the substance; agents delegate bounded tasks. All skills use `disable-model-invocation: true` for explicit-only invocation unless they should auto-apply (e.g. language patterns).
 
 ## Layout
 
-- `skills/<name>/` — Instructions, scripts, assets.
-- `commands/` — Slash playbooks for named outcomes only.
-- `agents/` — [Subagents](https://cursor.com/docs/subagents) (separate context, optional `readonly`). Installed to `~/.cursor/agents/` (and `~/.claude/agents/` when using the claude vendor). Invoke with `/name`.
+- `skills/<name>/` — SKILL.md + optional scripts, references, assets.
+- `agents/` — [Subagents](https://cursor.com/docs/subagents). Installed to `~/.cursor/agents/`. Invoke with `/name`.
 
-### Slash commands (outcomes)
+### Skills (explicit invocation)
 
-| Command | Purpose |
-| ------- | ------- |
-| `scaffold` | New project from templates (`project-scaffold` skill) |
-| `work-review` | Summarize work from transcripts; optional Jira (`work-review` skill) |
+| Skill | Purpose |
+| ----- | ------- |
+| `brainstorm` | Structured ideation with critical challenge, research subagents |
+| `coding-practice` | Generate no-AID coding practice sessions |
+| `commit-prep` | Branch name, conventional commit message, PR body from staged changes |
+| `fact-check` | Verify claims, citations, URLs with per-claim verdicts |
 | `find-issues` | Find GitHub issues for OSS contribution (`gh`) |
-| `brainstorm` | Structured ideation with critical challenge; no implementation (`brainstorm` skill) |
-| `rebase` | Fetch and rebase onto upstream default branch (`git-workflow` skill) |
+| `multi-review` | Parallel sub-agent code review from multiple perspectives |
+| `project-scaffold` | New project from templates (Go, Rust, Node, Python, React) |
+| `prose-refine` | Edit draft text for discord/slack/github/email preserving voice |
 | `reproduce-issue` | Reproduce a GitHub issue / build a test case (`gh`) |
+| `work-review` | Summarize work from transcripts; optional Jira mapping |
 
-Stack and domain work (Go, React, Python, TypeScript, Rust, OpenShift) lives in **skills** and **subagents** (`/go-dev`, `/react-dev`, etc.), not duplicate slash commands.
+### Skills (auto-apply by agent)
+
+| Skill | Purpose |
+| ----- | ------- |
+| `go-patterns` | Go conventions, errors, concurrency |
+| `python-patterns` | Python OOP, pydantic, type hints |
+| `react-patterns` | React components, hooks, providers |
+| `rust-patterns` | Rust modules, error handling, traits |
+| `typescript-patterns` | TypeScript strict types, async, DI |
+| `openshift-debug` | OpenShift cluster debugging |
+| `pqc-readiness` | Post-quantum crypto migration analysis |
+| `credentials` | Credential fetching from env vars |
+| `jira` | Jira REST API patterns |
+| `arxiv-ai-scan` | arXiv paper search |
 
 ## Deps
 
@@ -41,7 +56,7 @@ make install-deps
 
 ## Installation
 
-Copies `rules/`, `commands/`, `skills/`, and `agents/` into `~/.$vendor/`.
+Copies `skills/` and `agents/` into `~/.$vendor/`.
 
 ```bash
 make install

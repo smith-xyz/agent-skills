@@ -1,6 +1,7 @@
 ---
 name: project-scaffold
-description: Scaffold new projects from templates - Go, Rust, Node.js, React with cli/api variants. Use when creating a new project.
+description: Scaffold new projects from templates - Go, Rust, Node.js, React with cli/api variants. Use when user asks to scaffold, create, or start a new project.
+disable-model-invocation: true
 ---
 
 # Project Scaffold

@@ -1,18 +1,36 @@
 ---
 name: coding-practice
-description: Run coding-practice from .cursor/commands/coding-task. Use when user runs /coding-task or works in coding-practice/ sessions.
+description: Generate coding practice sessions (no-AID). Use when user asks for coding task, practice problem, or coding exercise.
+disable-model-invocation: true
 ---
 
 # Coding practice
 
-Sessions live under `~/.coding-practice/<language>/` as a single file (`<timestamp>-<difficulty>.<ext>`) or a session folder with minimal files if multi-file is needed.
+Generate a coding practice session. Do not implement the solution.
 
-## When user runs /coding-task
+## Parameters
 
-1. Parse difficulty (`easy`|`intermediate`|`hard`|`real`) and optional language. For `real`, language can be implied.
-2. Create session artifact under `~/.coding-practice/<language>/`. Create directories if needed.
-3. Generate one task; output spec only. Do not implement.
-4. Tell user to implement without AID, then load/paste results for review.
+- Difficulty (required): `easy` | `intermediate` | `hard` | `real`
+- Language (optional, ask if missing): `rust` | `go` | `typescript` | `python`. For `real`, language can be implied.
+
+## Session setup
+
+Sessions live under `~/.coding-practice/<language>/`. Create directories if needed.
+
+- `easy`/`intermediate`/`hard`: single file `<YYYY-MM-DDTHHMMSS>-<difficulty>.<ext>`. Folder with starter files only if the task genuinely needs multiple files.
+- `real`: always a folder `<YYYY-MM-DDTHHMMSS>-real/` with a short spec/README. Concrete product/systems ask (API, operator, CLI tool, etc.).
+
+## Difficulty
+
+- easy: one function or small program.
+- intermediate: a few functions, maybe one extra module.
+- hard: non-trivial algorithm or design, 2–3 files if needed.
+- real: real-world ticket-style task. Scenario, deliverables, constraints. Can span multiple sessions.
+
+## Output
+
+1. Print the task spec in chat (requirements, behavior, constraints).
+2. Tell user the session path and to implement without AID.
 
 ## When user works in a session file/folder
 

@@ -1,6 +1,7 @@
 ---
 name: brainstorm
-description: Structured ideation with critical challenge, bias detection, and research subagents. No implementation.
+description: Structured ideation with critical challenge, bias detection, and research subagents. No implementation. Use when user says brainstorm, ideate, or explore ideas.
+disable-model-invocation: true
 ---
 
 # Brainstorm
