@@ -78,7 +78,7 @@ show_installed() {
 
 TARGET=${1:-cursor}
 
-echo "=== Plugins Installer ==="
+echo "=== agent-skills installer ==="
 echo ""
 
 if [ "$TARGET" = "all" ]; then

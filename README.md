@@ -1,6 +1,8 @@
-# Cursor-Plugins
+# agent-skills
 
-Personally curated skills and subagents for Cursor or Claude Code.
+Personally curated [Agent Skills](https://agentskills.io/) and subagents for Cursor, Claude Code, and Codex.
+
+https://github.com/smith-xyz/agent-skills
 
 ## Mental model
 
@@ -56,10 +58,13 @@ make install-deps
 
 ## Installation
 
-Copies `skills/` and `agents/` into `~/.$vendor/`.
-
 ```bash
-make install
+git clone git@github.com:smith-xyz/agent-skills.git
+cd agent-skills
+make install-deps   # once
+make install        # copies skills/ and agents/ into ~/.cursor/, ~/.claude/, or ~/.codex/
 ```
+
+`make install` defaults to the `cursor` vendor. Pass a vendor name or `all`: `./copy-to-global.sh claude`.
 
 After `make install`, run `make lint` on changed files if you edit markdown.

@@ -2,7 +2,7 @@
 
 Markdown files in this directory follow [Cursor subagents](https://cursor.com/docs/subagents): YAML frontmatter plus prompt body. After `make install` / `./copy-to-global.sh`, they copy to `~/.cursor/agents/` (and `~/.claude/agents/` when using the claude vendor). Invoke with `/name` in chat.
 
-Add an agent when you want a **separate context** (long transcripts, verification) or a **readonly** pass. **Stack and domain agents** point at skills so they inherit your conventions without duplicating skill bodies in slash commands.
+Add an agent when you want a **separate context** (long transcripts, verification) or a **readonly** pass. **Stack and domain agents** point at skills so they inherit your conventions without duplicating skill bodies.
 
 `model: fast` may fall back depending on plan and org settings.
 

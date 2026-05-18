@@ -57,7 +57,7 @@ def fetch_feed(params: dict[str, str]) -> bytes:
     req = urllib.request.Request(
         url,
         headers={
-            "User-Agent": "arxiv-ai-scan/1.0 (cursor-plugins; +https://arxiv.org/help/api)"
+            "User-Agent": "arxiv-ai-scan/1.0 (agent-skills; +https://github.com/smith-xyz/agent-skills)"
         },
     )
     with urllib.request.urlopen(req, timeout=60) as resp:
