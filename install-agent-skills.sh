@@ -8,7 +8,7 @@ usage() {
   echo "Usage: $0 [vendor|all]"
   echo ""
   echo "Vendors: cursor, claude, codex, all"
-  echo "Default: cursor"
+  echo "Default: claude"
   exit 1
 }
 
@@ -55,6 +55,13 @@ copy_to_vendor() {
     shopt -u nullglob
   fi
 
+  # Copy settings.json for claude vendor
+  if [ "$vendor" = "claude" ] && [ -f "$SCRIPT_DIR/.claude/settings.json" ]; then
+    local settings_target="$HOME/.$vendor/settings.json"
+    echo "Copying settings to $settings_target..."
+    cp "$SCRIPT_DIR/.claude/settings.json" "$settings_target"
+  fi
+
   echo ""
 }
 
@@ -64,6 +71,7 @@ show_installed() {
   local commands_target="$HOME/.$vendor/commands"
   local skills_target="$HOME/.$vendor/skills"
   local agents_target="$HOME/.$vendor/agents"
+  local settings_file="$HOME/.$vendor/settings.json"
 
   echo "[$vendor] Rules:"
   ls -1 "$rules_target" 2>/dev/null | sed 's/^/  - /' || echo "  (none)"
@@ -73,10 +81,16 @@ show_installed() {
   ls -1 "$skills_target" 2>/dev/null | sed 's/^/  - /' || echo "  (none)"
   echo "[$vendor] Agents:"
   ls -1 "$agents_target" 2>/dev/null | sed 's/^/  - /' || echo "  (none)"
+
+  if [ "$vendor" = "claude" ] && [ -f "$settings_file" ]; then
+    echo "[$vendor] Settings:"
+    echo "  - Permissions configured in $settings_file"
+  fi
+
   echo ""
 }
 
-TARGET=${1:-cursor}
+TARGET=${1:-claude}
 
 echo "=== agent-skills installer ==="
 echo ""

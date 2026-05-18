@@ -10,4 +10,4 @@ install-deps:
 	brew install markdownlint-cli2
 
 install:
-	./copy-to-global.sh
+	./install-agent-skills.sh
