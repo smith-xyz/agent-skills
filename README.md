@@ -31,6 +31,7 @@ Skills hold the substance; agents delegate bounded tasks. All skills use `disabl
 | `project-scaffold` | New project from templates (Go, Rust, Node, Python, React) |
 | `prose-refine` | Edit draft text for discord/slack/github/email preserving voice |
 | `reproduce-issue` | Reproduce a GitHub issue / build a test case (`gh`) |
+| `sniff-bugs` | Hunt logic gaps, error-path holes, leaks, concurrency, observability misses |
 | `work-review` | Summarize work from transcripts; optional Jira mapping |
 
 ### Skills (auto-apply by agent)
@@ -50,10 +51,8 @@ Skills hold the substance; agents delegate bounded tasks. All skills use `disabl
 
 ## Deps
 
-Homebrew required.
-
 ```bash
-make install-deps
+make install-deps   # brew install gh jq openshift-cli
 ```
 
 ## Installation

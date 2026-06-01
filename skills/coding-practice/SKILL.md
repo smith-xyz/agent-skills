@@ -13,29 +13,35 @@ Generate a coding practice session. Do not implement the solution.
 - Difficulty (required): `easy` | `intermediate` | `hard` | `real`
 - Language (optional, ask if missing): `rust` | `go` | `typescript` | `python`. For `real`, language can be implied.
 
-## Session setup
+## Script
 
-Sessions live under `~/.coding-practice/<language>/`. Create directories if needed.
+```bash
+./scripts/practice.sh session_paths --language go --difficulty easy
+```
 
-- `easy`/`intermediate`/`hard`: single file `<YYYY-MM-DDTHHMMSS>-<difficulty>.<ext>`. Folder with starter files only if the task genuinely needs multiple files.
-- `real`: always a folder `<YYYY-MM-DDTHHMMSS>-real/` with a short spec/README. Concrete product/systems ask (API, operator, CLI tool, etc.).
+Returns JSON with `main`, `test`, and `workdir`/`readme` paths. **User creates the files** at those paths. Agent only prints the task spec in chat.
+
+Naming: `<YYYY-MM-DDTHHMMSS>-<difficulty>.<ext>`; test is `-test` (or `_test` for Go). `real` → folder `<timestamp>-real/` with `README.md` for the spec.
+
+`--multi` for a folder when easy/intermediate/hard needs multiple files.
 
 ## Difficulty
 
 - easy: one function or small program.
-- intermediate: a few functions, maybe one extra module.
-- hard: non-trivial algorithm or design, 2–3 files if needed.
-- real: real-world ticket-style task. Scenario, deliverables, constraints. Can span multiple sessions.
+- intermediate: a few functions, maybe one extra module (`--multi`).
+- hard: non-trivial algorithm or design (`--multi` if 2–3 files).
+- real: ticket-style task; spec in `README.md`.
 
 ## Output
 
-1. Print the task spec in chat (requirements, behavior, constraints).
-2. Tell user the session path and to implement without AID.
+1. Run `session_paths`; give user the paths.
+2. Print task spec in chat.
+3. User implements without AID.
 
-## When user works in a session file/folder
+## When user works in a session
 
-Give hints or clarify the spec only. Do not implement unless asked.
+Hints or spec clarification only. Do not implement unless asked.
 
-## When user loads/pastes their solution
+## When user pastes a solution
 
 Review briefly. Do not rewrite unless asked.

@@ -1,5 +1,5 @@
 /**
- * Result type for explicit error handling without exceptions.
+ * Result type for explicit error values (ok / err) at call sites.
  */
 export interface Result<T, E = Error> {
   readonly success: boolean;

@@ -90,7 +90,7 @@ show_installed() {
   echo ""
 }
 
-TARGET=${1:-claude}
+TARGET=${1:-cursor}
 
 echo "=== agent-skills installer ==="
 echo ""

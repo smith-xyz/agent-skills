@@ -5,75 +5,107 @@ description: TypeScript patterns - strict types, generics, DI, async patterns, c
 
 # TypeScript Patterns
 
-For backend, CLI, or library code (not React UI; use `react-patterns` for React).
+Backend, CLI, library code. For React UI, use `react-patterns`.
 
-## Feature development workflow
+## Workflow
 
-1. **Clarify** - Input/output? Dependencies? Error handling?
-2. **Plan** - Interfaces, classes or functions, error types, config
-3. **Build with DI** - Interfaces first, inject dependencies
+1. **Clarify** — I/O, deps, errors
+2. **Plan** — types, classes vs functions, config
+3. **Build** — define interfaces first, inject deps
 
 ## Layout
 
-```text
-src/
-├── types/        # Interfaces
-├── services/     # Business logic
-├── utils/        # Pure utilities
-├── errors/       # Custom errors
-└── index.ts      # Exports
-```
+| Scope | Location |
+| ----- | -------- |
+| 1:1 interface + class | Same file, interface above class |
+| Shared in feature folder | `types.ts` beside modules |
+| Package-wide | `src/types/` or `types/` |
 
-## Type Safety
+Expand `types.ts` into `types/` as shared types grow. Re-export each package's public API from its `index.ts`.
 
-- **No `any`** - Ask user first. Offer: generic, interface, or discriminated union
-- **`unknown` requires type guard** - `function isX(v: unknown): v is X`
-- **Generics over loose types** - `function first<T>(items: T[]): T | undefined`
-- **Branded types for IDs** - `type UserId = string & { readonly __brand: 'UserId' }`
+→ [references/layout.ts](references/layout.ts)
+
+## Type safety
+
+- Default to generics, interfaces, or discriminated unions; use `any` after the user confirms
+- Narrow `unknown` with a type guard
+- Prefer generics over loose unions
+- Brand IDs with a readonly brand field
+
+→ [references/type-safety.ts](references/type-safety.ts)
+
+## Classes
+
+Use classes for stateful services and domain objects with invariants. Use functions plus `interface` for stateless logic.
+
+### Naming (interfaces + classes)
+
+Name the interface for the contract (port/role). Name the class for the role or adapter.
+
+| Pattern | Example |
+| ------- | ------- |
+| Port + adapter | `interface UserRepository` · `class PostgresUserRepository` |
+| Service + injected port | `class UserService` · constructor takes `UserRepository` |
+| Alternate adapters | `InMemoryUserRepository`, `FakeUserRepository` |
+| Port naming | `Clock`, `UserRepository` — capability names |
+
+- Name a single implementation by adapter (`PostgresUserRepository`); introduce the interface when wiring DI or test doubles
+- Name services for orchestration (`UserService`); name repository interfaces for persistence (`UserRepository`)
+- Match the file name to the primary export (`user-service.ts` → `UserService`)
+
+→ [references/naming.ts](references/naming.ts) · [references/layout.ts](references/layout.ts)
+
+| Topic | Rule |
+| ----- | ---- |
+| Constructor | Declare deps with `private readonly` parameter properties |
+| Privacy | Store internal state in `#field`; mark subclass hooks `protected` |
+| Getters/setters | Add getters for derived fields; add setters when assignment validates or syncs state |
+| Structure | Add `implements` on services; use `static` for factories; keep one responsibility per class |
+| Types | Place 1:1 interfaces above the class; import shared types from `./types.ts` or `types/` |
+
+→ [references/classes.ts](references/classes.ts)
+
+## Control flow & iterators
+
+Write flat functions: guard clauses first, early `return` or `continue`, then separate `if` branches that each return.
+
+| Topic | Rule |
+| ----- | ---- |
+| Conditionals | Return or continue on edge cases; keep one level of `if` nesting; extract a helper for deeper branches |
+| Branching | Chain `if` + `return`; use `switch` with a `never` exhaustiveness check on discriminated unions |
+| Loops | Use `for...of`; skip with `continue`; use a counted `for` loop when the index is part of the algorithm |
+| Sequences | Use `function*` or `async function*` for lazy or paginated data; use `map` and `filter` for transforms |
+| Async loops | Use `for...of` with `await`, `break`, and `continue` in the loop body |
+
+→ [references/control-flow.ts](references/control-flow.ts) · pagination: [references/async.ts](references/async.ts) (`paginate`)
 
 ## Architecture
 
-- **No hardcoding** - Use config, environment, or injection
-- **Single responsibility** - One purpose per function/class
-- **Dependency injection** - Inject interfaces, not implementations
-- **Event-driven decoupling** - TypedEventEmitter for cross-cutting concerns
+- Load config from env or injected config objects
+- Assign one responsibility per module
+- Type dependencies as interfaces; register concrete classes at the composition root
+- Publish cross-cutting events through TypedEventEmitter
 
-## Async Patterns
+## Async
 
 | Need | Pattern |
-| ------ | --------- |
-| Multiple independent fetches | `Promise.all([...])` |
-| Partial failure handling | `Promise.allSettled([...])` |
-| First response wins / timeout | `Promise.race([...])` |
-| Streaming / pagination | `async function* generator()` |
-| Cancelable operations | `AbortController` + `signal` |
-| Concurrency limiting | Semaphore or `mapWithLimit` |
-| Shared state protection | Mutex |
-| Retry with backoff | `retry(fn, { attempts, delay, backoff })` |
+| ---- | ------- |
+| Parallel | `Promise.all` |
+| Partial failure | `Promise.allSettled` |
+| Timeout / race | `Promise.race` |
+| Stream / pages | `async function*` |
+| Cancel | `AbortController` |
+| Limit concurrency | Semaphore, `mapWithLimit` |
+| Shared mutable state | Mutex |
+| Retry | `retry` with backoff |
 
-See reference files for implementations.
-
-## References
-
-- [references/async.ts](references/async.ts) - withTimeout, retry, paginate, collect, deferred, debounceAsync
-- [references/concurrency.ts](references/concurrency.ts) - Mutex, Semaphore, mapWithLimit
-- [references/result.ts](references/result.ts) - Result type with ok, err, unwrap, tryCatch
-- [references/typed-emitter.ts](references/typed-emitter.ts) - TypedEventEmitter
+→ [references/async.ts](references/async.ts) · [references/concurrency.ts](references/concurrency.ts) · [references/result.ts](references/result.ts) · [references/typed-emitter.ts](references/typed-emitter.ts)
 
 ## Checklist
 
-- Interfaces defined before implementations?
-- Dependencies injected, not hard-imported concretely?
-- `any`? → Generic or interface
-- `unknown`? → Type guard
-- Hardcoded value? → Config or inject
-- Multiple responsibilities? → Split
-- Hard import? → Inject interface
-- Decoupling needed? → EventEmitter
-- Streaming/pagination? → AsyncGenerator
-- Cancelable? → AbortController
-- Multiple fetches? → Promise.all or allSettled
-- Need fallback/timeout? → Promise.race
-- Shared state? → Mutex
-- Too many parallel ops? → Semaphore
-- Error handling with Result or disciplined try/catch?
+- Place types in the same file, `types.ts`, or `types/` by scope
+- Name classes by role or adapter; name interfaces by port
+- Implement `implements`, store state in `#`, add getters/setters when they derive or validate
+- Structure control flow with guard clauses, early return, and `for...of`
+- Guard `unknown`, inject deps, externalize config
+- Pick the matching Promise helper, cancellation, concurrency tool, and `Result` or boundary try/catch

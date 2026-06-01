@@ -7,7 +7,7 @@ lint-fix:
 	markdownlint-cli2 --fix "**/*.md"
 
 install-deps:
-	brew install markdownlint-cli2
+	brew install gh jq openshift-cli
 
 install:
 	./install-agent-skills.sh
