@@ -1,0 +1,90 @@
+# PR Triage — {{timestamp}}
+
+## Run Summary
+
+| Metric | Count |
+|--------|-------|
+| PRs evaluated | {{counts.total}} |
+| New this run | {{counts.new_this_run}} |
+| Recommend REVIEW | {{counts.review}} |
+| Recommend CLOSE | {{counts.close}} |
+| Recommend MERGE-READY | {{counts.merge_ready}} |
+| Duplicate groups | {{counts.duplicate_groups}} |
+
+---
+
+## Needs Your Review
+
+{{#each review_items}}
+### [#{{number}}](https://github.com/{{repo}}/pull/{{number}}) — {{title}}
+
+| Author | Score | Updated | CI | Linked Issue | Stale |
+|--------|-------|---------|----|--------------|-----------| 
+| @{{author}} | **{{score}}/10** | {{updated_at}} | {{ci_status}} | {{#if linked_issue}}[#{{linked_issue}}](https://github.com/{{repo}}/issues/{{linked_issue}}){{else}}—{{/if}} | {{staleness_days}}d |
+
+{{rationale}}
+
+```bash
+gh pr checkout {{number}} --repo {{repo}}
+# Review, then:
+gh pr review {{number}} --repo {{repo}} --approve
+# or:
+gh pr review {{number}} --repo {{repo}} --request-changes --body "reason"
+```
+
+---
+{{/each}}
+
+## Merge Ready
+
+{{#each merge_ready_items}}
+### [#{{number}}](https://github.com/{{repo}}/pull/{{number}}) — {{title}}
+
+| Author | Score | CI | Linked Issue |
+|--------|-------|----|--------------|
+| @{{author}} | **{{score}}/10** | {{ci_status}} | {{#if linked_issue}}[#{{linked_issue}}](https://github.com/{{repo}}/issues/{{linked_issue}}){{else}}—{{/if}} |
+
+```bash
+gh pr checkout {{number}} --repo {{repo}}
+# Final review, then:
+gh pr merge {{number}} --repo {{repo}} --squash
+```
+
+---
+{{/each}}
+
+## Recommend Close
+
+{{#each close_items}}
+### [#{{number}}](https://github.com/{{repo}}/pull/{{number}}) — {{title}}
+
+| Author | Score | Updated | Stale | Reason |
+|--------|-------|---------|-------|--------|
+| @{{author}} | {{score}}/10 | {{updated_at}} | {{staleness_days}}d | {{rationale}} |
+
+```bash
+gh pr close {{number}} --repo {{repo}} -c "Closing: {{rationale}}"
+```
+
+---
+{{/each}}
+
+## Duplicate Groups (Bounty Detection)
+
+{{#each duplicate_groups}}
+### Issue [#{{issue}}](https://github.com/{{repo}}/issues/{{issue}}) — {{pr_count}} competing PRs
+
+| PR | Score | Recommendation |
+|----|-------|----------------|
+{{#each prs}}
+| [#{{number}}](https://github.com/{{repo}}/pull/{{number}}) | {{score}}/10 | **{{recommendation}}** |
+{{/each}}
+
+**Winner:** [#{{winner}}](https://github.com/{{repo}}/pull/{{winner}})
+
+```bash
+{{close_action}}
+```
+
+---
+{{/each}}

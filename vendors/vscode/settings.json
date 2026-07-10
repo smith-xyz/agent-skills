@@ -1,0 +1,22 @@
+{
+  "chat.permissions.default": "default",
+  "chat.agent.sandbox.enabled": "on",
+  "chat.tools.terminal.autoApprove": {
+    "/^go (test|build|vet|fmt)/": true,
+    "/^make (test|lint|build)/": true,
+    "/^npm (run test|run typecheck|run lint|test)/": true,
+    "/^yarn (run test|run typecheck|run lint|test)/": true,
+    "/^pnpm (run test|run typecheck|run lint|test)/": true,
+    "/^bun (run test|run typecheck|run lint|test)/": true,
+    "/^tsc --noEmit/": true,
+    "/^eslint/": true,
+    "/^prettier --check/": true,
+    "/^cargo (check|clippy|test|fmt --check)/": true,
+    "/^python3? -m (pytest|mypy)/": true,
+    "/^git (stash show|worktree list)/": true,
+    "rm": false,
+    "rmdir": false,
+    "/^rm -rf/": false,
+    "/^gh auth/": false
+  }
+}

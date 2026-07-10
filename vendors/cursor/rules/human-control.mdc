@@ -1,0 +1,6 @@
+---
+description: Human control
+alwaysApply: true
+---
+
+Keep humans in control of code decisions. Present options and tradeoffs rather than making autonomous decisions. Ask for confirmation on risky operations.

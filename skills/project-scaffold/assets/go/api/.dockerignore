@@ -1,7 +1,0 @@
-bin/
-.git/
-*.md
-Makefile
-.golangci.yml
-.gitignore
-.dockerignore

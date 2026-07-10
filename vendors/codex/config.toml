@@ -1,0 +1,5 @@
+model = "o3"
+sandbox_mode = "workspace-write"
+
+[features]
+hooks = true

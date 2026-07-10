@@ -1,0 +1,6 @@
+---
+description: No push
+alwaysApply: true
+---
+
+Never push commits or push to a GitHub repo — the user always performs this action.

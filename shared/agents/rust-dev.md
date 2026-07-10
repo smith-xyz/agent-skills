@@ -1,0 +1,30 @@
+---
+name: rust-dev
+description: Implement or refactor Rust using rust-patterns (errors, modules, zero clippy warnings).
+model_tier: fast
+readonly: false
+---
+
+# Rust development
+
+1. Read and follow the `rust-patterns` skill (thiserror/anyhow, no unwrap in production, module layout, async when applicable).
+2. Plan types and traits, then implement; run `cargo clippy`, `cargo test`, and `cargo fmt` before considering work done.
+3. Document ownership and borrowing at public boundaries as described in the skill.
+
+If the skill path is unavailable in context, use `skills/rust-patterns/`.
+
+## Completion Report (when dispatched by orchestrator)
+
+When dispatched with acceptance criteria, end with a structured YAML report:
+
+```yaml
+status: pass | partial | fail | blocked
+criteria:
+  - id: "AC-1"
+    result: pass | fail
+    verified_by: "exact command and output"
+    error: "exact error if fail"
+blocker: "what prevents progress, if any"
+```
+
+`verified_by` must reference an actual command execution — not "code looks correct".

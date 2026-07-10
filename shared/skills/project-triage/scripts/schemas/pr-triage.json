@@ -1,0 +1,89 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "PRTriage",
+  "description": "Output schema for the pr-triage subagent",
+  "type": "object",
+  "required": ["items", "duplicate_groups"],
+  "additionalProperties": false,
+  "properties": {
+    "items": {
+      "type": "array",
+      "minItems": 0,
+      "items": {
+        "type": "object",
+        "required": ["number", "score", "recommendation", "rationale"],
+        "additionalProperties": false,
+        "properties": {
+          "number": {
+            "type": "integer",
+            "description": "GitHub PR number"
+          },
+          "score": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10,
+            "description": "Overall quality score (0-10)"
+          },
+          "recommendation": {
+            "type": "string",
+            "enum": ["REVIEW", "CLOSE", "MERGE-READY"],
+            "description": "Action recommendation"
+          },
+          "rationale": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Brief explanation for the recommendation"
+          },
+          "linked_issue": {
+            "type": ["integer", "null"],
+            "description": "Linked issue number if detected"
+          },
+          "staleness_days": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Days since last update"
+          }
+        }
+      }
+    },
+    "duplicate_groups": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["issue", "prs", "winner"],
+        "additionalProperties": false,
+        "properties": {
+          "issue": {
+            "type": "integer",
+            "description": "Issue number that multiple PRs target"
+          },
+          "prs": {
+            "type": "array",
+            "minItems": 2,
+            "items": {
+              "type": "object",
+              "required": ["number", "score", "recommendation"],
+              "additionalProperties": false,
+              "properties": {
+                "number": { "type": "integer" },
+                "score": { "type": "number", "minimum": 0, "maximum": 10 },
+                "recommendation": {
+                  "type": "string",
+                  "enum": ["KEEP", "CLOSE"]
+                }
+              }
+            }
+          },
+          "winner": {
+            "type": "integer",
+            "description": "PR number recommended to keep"
+          },
+          "close_action": {
+            "type": "string",
+            "description": "Copy-pasteable gh CLI command to close losers"
+          }
+        }
+      }
+    }
+  }
+}
