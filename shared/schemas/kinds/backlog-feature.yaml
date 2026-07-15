@@ -1,0 +1,10 @@
+kind: backlog-feature
+version: 1
+description: Orchestrator-managed backlog features
+fields:
+  goal: { type: string, required: true }
+  agent: { type: string, required: true }
+  depends_on: { type: array, items: string }
+  attempts: { type: integer }
+  parallel_group: { type: string }
+  notes: { type: string, max: 300 }

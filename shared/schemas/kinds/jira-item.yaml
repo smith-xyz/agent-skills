@@ -1,0 +1,13 @@
+kind: jira-item
+version: 1
+description: Synced Jira tickets
+fields:
+  key: { type: string, required: true }
+  summary: { type: string, required: true }
+  jira_status: { type: string }
+  priority: { type: enum, values: [blocker, critical, major, minor, trivial] }
+  assignee: { type: string }
+  sprint: { type: string }
+  due_date: { type: string }
+  labels: { type: array, items: string }
+  linked_artifacts: { type: array, items: string }

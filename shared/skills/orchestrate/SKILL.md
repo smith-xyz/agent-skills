@@ -116,3 +116,27 @@ Beyond acceptance criteria, the verify step can dispatch:
 
 - `verifier` agent — skeptical LLM validation of claimed-complete work
 - `sniff-bugs` — defect sweep on modified files
+
+## Artifact Emission
+
+emits: backlog-feature
+
+After dispatching or completing a feature, update its artifact record:
+
+```bash
+artifact emit --kind backlog-feature --domain <domain> \
+  --id "<feature-id>" \
+  --title "<feature-id> — <short description>" \
+  --status <active|done|waiting> \
+  --next "<what's needed next, or omit if done>" \
+  --source orchestrate \
+  --data '{"goal": "<goal-name>", "agent": "<agent-name>", "depends_on": ["<dep1>", "<dep2>"], "attempts": <N>, "notes": "<brief status max 300 chars>"}'
+```
+
+When completing a batch dispatch, emit records for all features in the batch.
+
+At session end:
+
+```bash
+artifact suggest --source-skill orchestrate --text "<next dispatch recommendation or blocker>"
+```

@@ -31,8 +31,8 @@ done
 [[ -f "$source" ]] || { echo "Error: source not found: $source" >&2; exit 1; }
 
 case "$vendor" in
-  cursor|agents|claude|codex) ;;
-  *) echo "Error: vendor must be cursor, agents, claude, or codex" >&2; exit 1 ;;
+  cursor|agents|claude|codex|vscode) ;;
+  *) echo "Error: vendor must be cursor, agents, claude, codex, or vscode" >&2; exit 1 ;;
 esac
 
 extract_frontmatter() {
@@ -59,9 +59,9 @@ fm_field() {
 model_for_tier() {
   local tier=$1
   case "$vendor:$tier" in
-    cursor:fast|agents:fast) echo "fast" ;;
-    cursor:standard|agents:standard) echo "composer-2.5" ;;
-    cursor:inherit|agents:inherit|cursor:*|agents:*) echo "inherit" ;;
+    cursor:fast|agents:fast|vscode:fast) echo "fast" ;;
+    cursor:standard|agents:standard|vscode:standard) echo "composer-2.5" ;;
+    cursor:inherit|agents:inherit|cursor:*|agents:*|vscode:inherit|vscode:*) echo "inherit" ;;
 
     claude:fast) echo "haiku" ;;
     claude:standard) echo "sonnet" ;;

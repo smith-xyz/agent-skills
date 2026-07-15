@@ -70,8 +70,10 @@ Canonical config: `shared/mcp/mcp.json`. Rendered per vendor on install.
 | ----- | ------- |
 | `coding-practice` | Generate no-AID coding practice sessions |
 | `commit-prep` | Branch name, conventional commit message, PR body from staged changes |
+| `ghsa-triage` | Fetch/cluster GitHub Security Advisories; validate with sink evidence; opt-in adversarial pass |
 | `morning-briefing` | Morning digest via GitHub/Atlassian MCP + transcript history |
 | `orchestrate` | Generic project loop — DAG, dispatch, verify, iterate |
+| `project-triage` | Issue/PR triage pipeline — labels, backlog plans, PR scoring |
 | `sniff-bugs` | Hunt logic gaps, error-path holes, leaks, concurrency, observability misses |
 | `triage` | Issue/PR triage via GitHub MCP — score, classify, render reports |
 | `verify-gate` | Composable hook helper for post-turn compile/lint/test verification |
@@ -87,7 +89,7 @@ Canonical config: `shared/mcp/mcp.json`. Rendered per vendor on install.
 | `rust-patterns` | Rust modules, error handling, traits |
 | `typescript-patterns` | TypeScript strict types, async, DI |
 | `openshift-debug` | OpenShift cluster debugging |
-| `qodo-review` | Fetch and act on Qodo PR review comments |
+| `pr-comments` | Fetch PR review comments (human + bots); Qodo/CodeRabbit notes |
 | `arxiv-ai-scan` | arXiv paper search |
 
 ## Skill Map
@@ -98,8 +100,10 @@ graph TD
   subgraph explicit [Skills — explicit invocation]
     coding_practice["coding-practice"]
     commit_prep["commit-prep"]
+    ghsa_triage["ghsa-triage"]
     morning_briefing["morning-briefing"]
     orchestrate["orchestrate"]
+    project_triage["project-triage"]
     sniff_bugs["sniff-bugs"]
     triage["triage"]
     verify_gate["verify-gate"]
@@ -110,7 +114,7 @@ graph TD
     go_patterns["go-patterns"]
     openshift_debug["openshift-debug"]
     python_patterns["python-patterns"]
-    qodo_review["qodo-review"]
+    pr_comments["pr-comments"]
     react_patterns["react-patterns"]
     rust_patterns["rust-patterns"]
     typescript_patterns["typescript-patterns"]
@@ -125,13 +129,18 @@ graph TD
     AWS["AWS MCP"]
   end
   subgraph agents_graph [Agents]
+    agent_code_complexity(["code-complexity ⓡ"])
+    agent_defender(["defender ⓡ"])
     agent_go_dev["go-dev"]
+    agent_impact_repro(["impact-repro ⓡ"])
     agent_openshift_debug(["openshift-debug ⓡ"])
     agent_orchestrator["orchestrator"]
     agent_python_dev["python-dev"]
     agent_react_dev["react-dev"]
+    agent_red_team(["red-team ⓡ"])
     agent_researcher(["researcher ⓡ"])
     agent_rust_dev["rust-dev"]
+    agent_security_assess(["security-assess ⓡ"])
     agent_typescript_dev["typescript-dev"]
     agent_verifier(["verifier ⓡ"])
     agent_work_review(["work-review ⓡ"])
@@ -140,6 +149,13 @@ graph TD
   orchestrate --> agent_researcher
   orchestrate --> agent_verifier
   orchestrate -.-> sniff_bugs
+  ghsa_triage --> agent_security_assess
+  ghsa_triage --> agent_impact_repro
+  ghsa_triage --> agent_code_complexity
+  ghsa_triage -.-> agent_red_team
+  ghsa_triage -.-> agent_defender
+  ghsa_triage -->|"advisory fetch via"| GitHub
+  project_triage -->|"issue/PR fetch via"| GitHub
   react_patterns -.-> typescript_patterns
   sniff_bugs -.-> go_patterns
   sniff_bugs -.-> python_patterns

@@ -1,0 +1,55 @@
+{
+  "name": "artifact-viewer",
+  "displayName": "Artifact Viewer",
+  "description": "Editor-tab PM view for structured agent artifacts",
+  "version": "0.1.0",
+  "publisher": "smith-xyz",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "artifact-viewer.open",
+        "title": "Artifact Viewer: Open"
+      }
+    ]
+  },
+  "scripts": {
+    "build": "node esbuild.config.mjs",
+    "build:webview": "vite build --config webview/vite.config.ts",
+    "compile": "npm run build && npm run build:webview",
+    "package": "npx @vscode/vsce package --no-dependencies --allow-missing-repository",
+    "install-ext": "npm run compile && npm run package && cursor --install-extension artifact-viewer-0.1.0.vsix --force"
+  },
+  "dependencies": {
+    "@dagrejs/dagre": "^1",
+    "@xyflow/react": "^12",
+    "js-yaml": "^4.1.0",
+    "sql.js": "^1.11.0"
+  },
+  "devDependencies": {
+    "@types/dagre": "^0.7.52",
+    "@types/js-yaml": "^4.0.9",
+    "@types/node": "^22.15.21",
+    "@types/react": "^19.1.2",
+    "@types/react-dom": "^19.1.2",
+    "@types/vscode": "^1.85.0",
+    "@vitejs/plugin-react": "^4.4.1",
+    "autoprefixer": "^10.4.21",
+    "esbuild": "^0.25.4",
+    "postcss": "^8.5.3",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "tailwindcss": "^3.4.17",
+    "typescript": "^5.8.3",
+    "vite": "^6.3.5"
+  }
+}

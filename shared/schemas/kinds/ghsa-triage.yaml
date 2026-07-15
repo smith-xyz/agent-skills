@@ -1,0 +1,11 @@
+kind: ghsa-triage
+version: 1
+description: Security advisory triage records
+fields:
+  ghsa_id: { type: string, required: true }
+  severity: { type: enum, values: [critical, high, medium, low, none] }
+  cvss: { type: float }
+  stage: { type: enum, values: [prelim, validated, adversarial, fix-reviewed] }
+  disposition: { type: enum, values: [confirmed, closed-dupe, closed, published, dismissed, pending] }
+  notes: { type: string, max: 300 }
+  poc_path: { type: string }

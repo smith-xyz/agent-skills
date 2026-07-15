@@ -1,0 +1,38 @@
+{
+  "type": "object",
+  "required": ["items"],
+  "properties": {
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["number", "labels_add", "recommendation"],
+        "properties": {
+          "number": { "type": "integer" },
+          "labels_add": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "labels_remove": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "recommendation": {
+            "type": "string",
+            "enum": ["REVIEW", "CLOSE", "NEEDS-REPRO", "DUPLICATE"]
+          },
+          "close_reason": { "type": "string" },
+          "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+          "effort": {
+            "type": "string",
+            "enum": ["quick-fix", "medium", "large"]
+          },
+          "area": { "type": "string" },
+          "summary": { "type": "string" }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

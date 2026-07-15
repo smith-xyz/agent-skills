@@ -1,0 +1,162 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color: var(--vscode-editor-foreground);
+  background: var(--vscode-editor-background);
+  font-family: var(--vscode-font-family);
+  font-size: 14px;
+  line-height: 1.5;
+
+  --av-gutter: 1rem;
+  --av-section-gap: 1.5rem;
+  --av-list-gap: 0.5rem;
+  --av-card-px: 1rem;
+  --av-card-py: 0.75rem;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+}
+
+#root {
+  height: 100vh;
+  overflow: hidden;
+}
+
+@layer components {
+  .av-gutter {
+    @apply px-4;
+  }
+
+  .av-page {
+    @apply px-4 py-4;
+  }
+
+  .av-header-bar {
+    @apply sticky top-0 z-10 border-b border-border bg-background px-4 py-3;
+  }
+
+  .av-page-title {
+    @apply text-base font-semibold text-foreground;
+  }
+
+  .av-view-title {
+    @apply text-lg font-semibold leading-snug text-foreground;
+  }
+
+  .av-section {
+    @apply mb-6;
+  }
+
+  .av-section-heading {
+    @apply mb-3 text-xs font-semibold uppercase tracking-wide text-muted;
+  }
+
+  .av-detail-fields {
+    @apply space-y-4;
+  }
+
+  .av-detail-label {
+    @apply text-xs font-medium uppercase text-muted;
+  }
+
+  .av-detail-value {
+    @apply break-words text-sm text-foreground;
+  }
+
+  .av-meta {
+    @apply text-sm text-muted;
+  }
+
+  .av-card {
+    @apply w-full rounded border border-border px-4 py-3 text-left transition-colors hover:bg-[var(--vscode-list-hoverBackground)];
+    border-color: color-mix(in srgb, var(--vscode-panel-border) 50%, transparent);
+  }
+
+  .av-card-title {
+    @apply truncate text-base font-medium text-foreground;
+  }
+
+  .av-list {
+    @apply space-y-2;
+  }
+
+  .av-list-gutter {
+    @apply px-4 py-3;
+  }
+
+  .av-collapsible-header {
+    @apply flex w-full items-center justify-between px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted hover:bg-[var(--vscode-list-hoverBackground)];
+  }
+
+  .av-collapsible-action {
+    @apply text-xs font-normal normal-case;
+  }
+
+  .av-button {
+    @apply rounded px-3 py-1.5 text-sm transition-colors;
+  }
+
+  .av-button-ghost {
+    @apply rounded border border-border px-3 py-1.5 text-sm text-muted transition-colors hover:bg-[var(--vscode-list-hoverBackground)];
+  }
+
+  .av-button-primary {
+    @apply rounded bg-accent px-3 py-1.5 text-sm text-accent-foreground transition-colors hover:opacity-90;
+  }
+
+  .av-button-link {
+    @apply text-sm text-accent hover:underline;
+  }
+
+  .av-badge {
+    @apply inline-block rounded px-2 py-0.5 text-xs font-medium leading-none;
+  }
+
+  .av-status-badge {
+    @apply rounded border px-1.5 py-0.5 text-xs uppercase tracking-wide;
+  }
+
+  .av-tab {
+    @apply rounded px-3 py-1.5 text-sm font-medium transition-colors;
+  }
+
+  .av-tab-active {
+    @apply bg-accent text-accent-foreground;
+  }
+
+  .av-tab-inactive {
+    @apply text-muted hover:text-foreground;
+  }
+
+  .av-tab-inactive:hover {
+    background-color: color-mix(in srgb, var(--vscode-badge-background) 40%, transparent);
+  }
+
+  .av-select {
+    @apply ml-2 rounded border border-border bg-background px-3 py-1.5 text-sm text-foreground;
+  }
+
+  .av-table {
+    @apply w-full border-collapse text-sm;
+  }
+
+  .av-table-header {
+    @apply border-b border-border text-left text-xs font-semibold uppercase tracking-wide text-muted;
+  }
+
+  .av-table-cell {
+    @apply px-4 py-2.5;
+  }
+
+  .av-empty {
+    @apply px-4 py-6 text-sm text-muted;
+  }
+
+  .av-divider-section {
+    @apply border-t border-border;
+  }
+}

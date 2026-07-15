@@ -1,0 +1,42 @@
+domain: my-team
+initiative: "Product Security / Platform"
+topology:
+  nodes:
+    - id: scanner
+      label: "Vulnerability Scanner"
+      type: external-source
+    - id: ingest
+      label: "Ingest Pipeline"
+      type: internal
+    - id: findings
+      label: "Findings Model"
+      type: internal
+    - id: engine
+      label: "Remediation Engine"
+      type: internal
+    - id: ci-gate
+      label: "CI Gate"
+      type: external-system
+  edges:
+    - from: scanner
+      to: ingest
+    - from: ingest
+      to: findings
+    - from: findings
+      to: engine
+    - from: engine
+      to: ci-gate
+gates:
+  - name: security review
+    applies_when: "touches sensitive data"
+  - name: public disclosure
+    applies_when: "public repo PR"
+  - name: API contract review
+    applies_when: "cross-service API change"
+stakeholders:
+  - Security team
+  - Platform engineering
+  - Release engineering
+delivers_to:
+  - Security posture dashboard
+  - CI gate enforcement

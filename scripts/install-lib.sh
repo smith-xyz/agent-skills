@@ -14,6 +14,7 @@ STALE_SKILLS=(
   project-scaffold prose-refine fact-check multi-review
   adversarial-review reproduce-issue find-issues jira
   credentials gh-project-workflow pqc-readiness brainstorm
+  qodo-review
 )
 
 vendor_home() {
@@ -44,15 +45,19 @@ _install_item() {
 
 install_skills() {
   local vendor=$1
-  local target
+  local target src_dir
   target="$(vendor_home "$vendor")/skills"
-  [ -d "$SHARED/skills" ] || return
+  src_dir="$VENDORS/$vendor/skills"
+  # Fall back to shared/ if vendor skills not rendered (skills need no transformation)
+  if [ ! -d "$src_dir" ]; then
+    src_dir="$SHARED/skills"
+  fi
+  [ -d "$src_dir" ] || return
   mkdir -p "$target"
-  for src in "$SHARED/skills/"*/; do
+  for src in "$src_dir/"*/; do
     [ -d "$src" ] || continue
     local name
     name=$(basename "$src")
-    # Skip if native (non-symlink) file/dir already exists in link mode
     if [ "$INSTALL_MODE" = "link" ] && [ -e "$target/$name" ] && [ ! -L "$target/$name" ]; then
       echo "  SKIP native: $name"
       continue
@@ -81,27 +86,21 @@ remove_skills() {
 
 install_agents() {
   local vendor=$1
-  local target
+  local target src_dir
   target="$(vendor_home "$vendor")/agents"
-  [ -d "$SHARED/agents" ] || return
+  src_dir="$VENDORS/$vendor/agents"
+  [ -d "$src_dir" ] || { echo "  agents: run 'make render' first"; return 1; }
   mkdir -p "$target"
-  if [[ "$vendor" == "codex" ]]; then
-    for f in "$SHARED/agents/"*.md; do
-      [[ "$(basename "$f")" == "README.md" ]] && continue
-      "$REPO_ROOT/scripts/render-agent.sh" --vendor "$vendor" --source "$f" --dest "$target/$(basename "${f%.md}.toml")"
-    done
-  else
-    for f in "$SHARED/agents/"*.md; do
-      [[ "$(basename "$f")" == "README.md" ]] && continue
-      local base
-      base=$(basename "$f")
-      if [ "$INSTALL_MODE" = "link" ] && [ -e "$target/$base" ] && [ ! -L "$target/$base" ]; then
-        echo "  SKIP native: $base"
-        continue
-      fi
-      _install_item "$f" "$target/$base"
-    done
-  fi
+  for f in "$src_dir/"*; do
+    [ -e "$f" ] || continue
+    local base
+    base=$(basename "$f")
+    if [ "$INSTALL_MODE" = "link" ] && [ -e "$target/$base" ] && [ ! -L "$target/$base" ]; then
+      echo "  SKIP native: $base"
+      continue
+    fi
+    _install_item "$f" "$target/$base"
+  done
   echo "  agents → $target ($INSTALL_MODE)"
 }
 

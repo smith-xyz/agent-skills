@@ -113,3 +113,24 @@ aggregate cross-project summary
 - Entirely readonly against source repos — never modify source, create branches, or run mutating `gh` commands
 - Only writes under `$TRIAGE_DIR`
 - All `gh` commands in reports are for the USER to copy-paste
+
+## Artifact Emission
+
+emits: project-triage
+
+After completing triage (persisting results to triage.db), emit a summary record to artifacts.db:
+
+```bash
+artifact emit --kind project-triage --domain <domain> --repo <org/repo> \
+  --title "Triage: <repo> — <date>" \
+  --status <active|done> \
+  --next "<next triage action if any>" \
+  --source project-triage \
+  --data '{"issues_triaged": <N>, "prs_scored": <N>, "quick_fixes": <N>}'
+```
+
+Note: project-triage does not yet have a dedicated kind schema. Use the envelope fields only. Emit a suggestion if the schema needs extension:
+
+```bash
+artifact suggest --source-skill project-triage --text "project-triage needs dedicated kind schema with issues_triaged/prs_scored fields"
+```

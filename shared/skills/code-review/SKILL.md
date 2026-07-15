@@ -95,3 +95,24 @@ Only non-obvious risk paths.
 - Agents are readonly
 - Reports go under workspace `.reviews/`, never into project source trees
 - Project context (brittle areas, architecture layers) lives in `context.md` next to configs — not in this skill
+
+## Artifact Emission
+
+emits: code-review
+
+After completing a review, emit the verdict:
+
+```bash
+artifact emit --kind code-review --domain <domain> --repo <org/repo> \
+  --id "pr-<number>" \
+  --title "Review: PR #<number> — <short title>" \
+  --status done \
+  --source code-review \
+  --data '{"pr_number": <N>, "pr_url": "<url>", "verdict": "<approve|approve-with-comments|request-changes|reject>", "risk": "<low|medium|high|critical>", "blockers_count": <N>, "concerns": ["<concern1>", "<concern2>"]}'
+```
+
+At session end:
+
+```bash
+artifact suggest --source-skill code-review --text "<follow-up action or schema gap>"
+```

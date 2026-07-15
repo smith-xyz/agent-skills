@@ -1,0 +1,9 @@
+kind: project-triage
+version: 1
+description: Project triage summary — issues, PRs, and prioritization snapshot
+fields:
+  repo: { type: string, required: true }
+  open_issues: { type: integer }
+  open_prs: { type: integer }
+  labels_audited: { type: boolean }
+  top_priority_ids: { type: array, items: integer }

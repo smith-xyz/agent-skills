@@ -1,4 +1,4 @@
-.PHONY: lint lint-fix install-deps \
+.PHONY: lint lint-fix install-deps render check-drift \
        install-cursor install-claude install-codex install-vscode \
        install-cursor-workspace \
        remove-cursor remove-claude remove-codex remove-vscode
@@ -8,6 +8,12 @@ lint:
 
 lint-fix:
 	markdownlint-cli2 --fix "**/*.md"
+
+render:
+	./scripts/render-all.sh
+
+check-drift:
+	./scripts/check-drift.sh
 
 install-deps:
 	brew install gh jq openshift-cli

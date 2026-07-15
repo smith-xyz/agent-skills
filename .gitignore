@@ -6,3 +6,14 @@
 
 # dev env
 .vscode/
+
+# Bun / Node
+node_modules/
+bun.lock
+bun.lockb
+
+# Compiled artifact CLI (bun build --compile)
+shared/lib/artifact-emit/artifact
+
+# macOS
+.DS_Store

@@ -1,0 +1,20 @@
+kind: envelope
+version: 1
+description: Universal artifact record — every artifact in the system has these fields
+fields:
+  id: { type: string, required: true, description: "Unique ID: {kind}/{domain}/{local_id}" }
+  kind: { type: string, required: true, description: "References a schema kind" }
+  title: { type: string, required: true, max: 120, description: "One-line human description" }
+  domain: { type: string, required: true, description: "Workspace domain (hpcase, typeorm, smith-xyz)" }
+  source: { type: string, required: true, description: "What produced this (skill name, jira-sync, manual)" }
+  url: { type: string, description: "External link" }
+  related: { type: array, items: string, description: "IDs of connected artifacts" }
+  diagram_ref: { type: string, description: "Path to generated diagram" }
+  node: { type: string, description: "System topology node this touches" }
+  next: { type: string, max: 200, description: "What do I need to do? Null = nothing needed" }
+  blocked: { type: string, description: "What prevents action" }
+  status: { type: enum, required: true, values: [done, active, waiting, needs-me, stale] }
+  last_action: { type: string, max: 200, description: "What just happened" }
+  last_action_at: { type: datetime, description: "When last action occurred" }
+  updated: { type: datetime, required: true, description: "Last record modification" }
+  created: { type: datetime, required: true, description: "First seen" }
