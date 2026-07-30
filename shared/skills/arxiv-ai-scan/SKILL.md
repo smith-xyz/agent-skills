@@ -1,6 +1,8 @@
 ---
 name: arxiv-ai-scan
-description: Run arxiv-search.py (via arxiv-search.sh); return stdout to the user.
+description: >-
+  Run the arXiv AI paper scanner and return its results. Use when asked to scan
+  arXiv, check for new AI papers, or survey recent research postings.
 ---
 
 # arXiv AI scan
@@ -34,3 +36,7 @@ Freeform: `--focus "context files LLM efficacy"` splits on spaces and uses each 
 | Agent reliability research this month | `./scripts/arxiv-search.sh --days 30 --focus agent-reliability` |
 
 `arxiv-search.sh` invokes `arxiv-search.py`. On failure (e.g. no network), user runs the same in a terminal and pastes output.
+
+## Done when
+
+The scanner ran and its output was returned verbatim to the user. On failure, the exact command to run manually was given instead. No papers were summarized from memory.

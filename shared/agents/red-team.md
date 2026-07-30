@@ -39,7 +39,7 @@ After round 2, produce final positions with confidence (`high` / `medium` / `low
 
 Structured challenges keyed to finding / GHSA IDs:
 
-```
+```text
 ## Red Team — round <N>
 
 ### Challenge — <id>

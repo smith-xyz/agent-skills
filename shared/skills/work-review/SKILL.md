@@ -21,11 +21,11 @@ Run from the work-review skill directory (execution location may vary).
 
 ## Parameters
 
-| Parameter | Default        | Description                  |
+| Parameter | Default | Description |
 | --------- | -------------- | ---------------------------- |
-| days      | 7              | Number of days to look back  |
-| max_words | 500            | Target word count for report |
-| style     | casual-bullets | Output style (see below)     |
+| days | 7 | Number of days to look back |
+| max_words | 500 | Target word count for report |
+| style | casual-bullets | Output style (see below) |
 
 **Style presets:**
 
@@ -53,3 +53,7 @@ Jira output format: `key|type|summary|status|parent_key|updated`. Group by Epic 
 - Default 7 days, 500 words if unspecified. Parse time ("last 3 days", "past week") and length ("brief", "for an email", "comprehensive") from user input.
 - Untracked work: include briefly; don't force a ticket per bullet. Weekly-sync/weekly-email: lead with story or "No user story" when Jira mapping is used.
 - Transcript formats: vendor-specific (e.g. .txt, .jsonl); scripts and skill are location-agnostic.
+
+## Done when
+
+The review covers the requested window in the requested format and length, every claim traces to a transcript or ticket rather than to recollection, and in-progress work is distinguished from completed work.

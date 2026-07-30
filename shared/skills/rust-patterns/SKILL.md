@@ -111,3 +111,7 @@ Avoid macros when:
 - Complex config? → Builder pattern
 - Async workers? → mpsc + select!
 - Repetitive boilerplate? → Consider macro
+
+## Done when
+
+This is a reference, not a routine. It is satisfied when the Rust you wrote or reviewed follows the ownership, error handling, and trait patterns above — and any deliberate deviation is called out with a reason.

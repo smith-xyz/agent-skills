@@ -74,3 +74,7 @@ Copy and modify:
 - No `any` types (ask before using)?
 - Handlers in `useCallback`?
 - Context values memoized with `useMemo` where needed?
+
+## Done when
+
+This is a reference, not a routine. It is satisfied when the components you wrote or reviewed follow the state, effect, and composition patterns above — and any deliberate deviation is called out with a reason.

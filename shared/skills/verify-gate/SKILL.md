@@ -1,94 +1,95 @@
 ---
 name: verify-gate
 description: >-
-  Configure post-turn verification hooks for any project. Detects changed files,
-  runs tiered checks (compile → lint → test), feeds failures back as followup
-  messages. Use when setting up hooks, configuring CI gating, or adding
-  post-turn verification to a project.
+  Install a post-turn verification hook in a project so compile, lint, and test
+  failures are caught automatically between agent turns. Use when setting up a
+  verification hook, wiring post-turn checks, or adding automatic regression
+  catching to a repo. Installs the gate; tiered-verify defines what runs.
 disable-model-invocation: true
 ---
 
+<!-- r6-ok: documents where each vendor stores hook config; that is the skill's subject -->
+
 # Verify Gate
 
-Composable hook helper for post-turn verification. Catches regressions between agent turns automatically.
+Wire a `Stop` hook that runs fast checks after every agent turn and feeds
+failures straight back. Deterministic and LLM-free, so it costs nothing to
+leave on.
 
-**Complementary to `verifier` agent:** This hook is per-turn, deterministic, and fast (no LLM). The `verifier` agent is per-task, thorough, and LLM-driven. Use both: hook catches regressions between turns; verifier validates completed work.
+**Boundary:** this skill *installs the hook*. What the tiers actually run is
+`tiered-verify`'s job — do not redefine check tiers here.
 
-## Setup
+## Vendor support
 
-### 1. Copy hook scripts to your project
+Hooks are read from `~/.claude/settings.json` by Claude Code, VS Code Copilot,
+and Cursor alike, so one wiring covers all three. Cursor also accepts a
+project-local `.cursor/hooks.json`. Codex has no hook support — there, run
+`tiered-verify` manually.
 
-```bash
-cp skills/verify-gate/scripts/post-turn-verify.sh .cursor/hooks/
-cp skills/verify-gate/scripts/format-on-edit.sh .cursor/hooks/
-chmod +x .cursor/hooks/*.sh
-```
+Project-local hooks are the right scope here: verification commands are
+repo-specific.
 
-### 2. Create `.cursor/hooks.json`
+## Procedure
 
-```json
-{
-  "version": 1,
-  "hooks": {
-    "stop": [
-      {
-        "command": ".cursor/hooks/post-turn-verify.sh",
-        "loop_limit": 3
-      }
-    ],
-    "afterFileEdit": [
-      {
-        "command": ".cursor/hooks/format-on-edit.sh",
-        "matcher": "Write"
-      }
-    ]
-  }
-}
-```
+1. **Detect the stack** and pick a starting script from
+   `references/examples/`: `go-gate.sh`, `rust-gate.sh`, `ts-gate.sh`, or
+   `multi-repo-gate.sh` for a repo with several sub-projects.
+2. **Copy the hook scripts** into the project and make them executable:
 
-### 3. Configure checks (optional)
+   ```bash
+   mkdir -p .agent/hooks
+   cp <skill-dir>/scripts/post-turn-verify.sh .agent/hooks/
+   cp <skill-dir>/scripts/format-on-edit.sh   .agent/hooks/
+   chmod +x .agent/hooks/*.sh
+   ```
 
-Set `VERIFY_GATE_CHECKS` in your environment or edit the script directly. Default: auto-detect by file extension.
+3. **Register the hook.** Add to the project's hook config, keying off `Stop`:
 
-## How It Works
+   ```json
+   {
+     "hooks": {
+       "Stop": [
+         { "hooks": [ { "type": "command",
+                        "command": ".agent/hooks/post-turn-verify.sh" } ] }
+       ]
+     }
+   }
+   ```
 
-```
-agent turn ends → stop hook fires →
+   Cursor's project-local format uses `"stop"` with a `loop_limit`. See
+   [references/hooks-json.md](references/hooks-json.md) for the per-vendor
+   shapes.
+
+4. **Wire the tiers to real commands.** Point each tier at a command that
+   actually exists in this repo — a gate calling a missing script fails open
+   and silently protects nothing.
+5. **Cap the retry loop.** Three attempts maximum. Without a cap, a failing
+   check and a persistent agent will loop until the turn is killed.
+6. **Prove it fires.** Introduce a deliberate error, run a turn, confirm the
+   failure comes back, then remove the error.
+
+## How it works
+
+```text
+turn ends → Stop hook →
   detect changed files by extension →
-  tier 1: compile/typecheck (fast) →
-    fail? → followup_message with error
-  tier 2: lint (medium) →
-    fail? → followup_message with error
-  tier 3: test (slow, only if earlier tiers pass) →
-    fail? → followup_message with error
-  all pass → echo '{}' (no followup)
+  tier 1 compile/typecheck  → fail? report and stop
+  tier 2 lint               → fail? report and stop
+  tier 3 test (only if 1+2 pass) → fail? report and stop
+  all pass → emit {} (silent)
 ```
 
-`loop_limit: 3` prevents infinite retry loops. After 3 failed attempts, the hook stops and the agent's turn ends.
+Tiers are ordered by cost. Never run tests before the code compiles.
 
-## Scripts
+## Constraints
 
-| Script | Hook event | Purpose |
-|--------|-----------|---------|
-| `post-turn-verify.sh` | `stop` | Detect changes, run tiered checks, feed failures back |
-| `format-on-edit.sh` | `afterFileEdit` | Auto-format files after write (by extension) |
+- **Fast tiers only.** Anything over a few seconds belongs in CI or in a
+  deliberate `tiered-verify` run, not on every turn.
+- **Fail loudly, not silently.** A gate that errors internally must say so.
+- **Never auto-commit** from a hook.
 
-## Language-Specific Examples
+## Done when
 
-Pre-built gate scripts in `references/examples/`:
-
-| Example | Stack | Checks |
-|---------|-------|--------|
-| `rust-gate.sh` | Rust | `cargo check` → `clippy -D warnings` → `cargo test` |
-| `go-gate.sh` | Go | `go vet` → `golangci-lint` → `go test` |
-| `ts-gate.sh` | TypeScript | `tsc --noEmit` → `eslint` → test runner |
-| `multi-repo-gate.sh` | Multi-repo | Per-directory detection (caseboard pattern) |
-
-## References
-
-- `references/hooks-json.md` — hooks.json format and event reference
-- `references/examples/` — language-specific gate scripts
-
-## Cursor-Only
-
-Hooks are a Cursor feature. Claude Code and Codex do not support hooks.json. For those vendors, use the `verifier` agent or manual verification.
+The hook is registered, every tier points at a command that exists in the repo,
+the retry cap is set, and a deliberately introduced error was caught and
+reported back — proving the gate actually fires.

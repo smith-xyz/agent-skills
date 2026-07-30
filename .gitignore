@@ -12,8 +12,11 @@ node_modules/
 bun.lock
 bun.lockb
 
-# Compiled artifact CLI (bun build --compile)
-shared/lib/artifact-emit/artifact
+# Compiled gate engine
+tools/agent-gate/agent-gate
+
+# Agent-owned scratch space (see shared/rules/agent-artifacts.mdc)
+.agent/
 
 # macOS
 .DS_Store

@@ -7,6 +7,8 @@ description: >-
 disable-model-invocation: true
 ---
 
+<!-- r6-ok: cross-repo daily tool; its output is intentionally home-scoped, not repo-scoped -->
+
 # Morning Briefing
 
 Yesterday's work comes from transcript analysis. Live GitHub/Jira/CI data comes from MCP servers — no wrapper scripts needed.
@@ -17,7 +19,7 @@ Yesterday's work comes from transcript analysis. Live GitHub/Jira/CI data comes 
 ## Scripts
 
 | Script | Purpose |
-|--------|---------|
+| -------- | --------- |
 | `./scripts/morning-briefing.sh` | Collect yesterday's work → `~/.developer/morning-briefing/YYYY-MM-DD.md` |
 | `./scripts/collect-yesterday.sh` | Yesterday's work via `work-review` transcript scripts |
 
@@ -32,7 +34,7 @@ Yesterday's work comes from transcript analysis. Live GitHub/Jira/CI data comes 
 ## Digest Sections
 
 | Section | Source | Content |
-|---------|--------|---------|
+| --------- | -------- | --------- |
 | Yesterday | `collect-yesterday.sh` | Work accomplished from transcripts |
 | Action needed | GitHub MCP | Reviews requested, changes requested on my PRs, CI failing |
 | Stale | GitHub MCP | PRs with no update in 14+ days |
@@ -50,3 +52,7 @@ Yesterday's work comes from transcript analysis. Live GitHub/Jira/CI data comes 
 
 See `references/scheduling.md` for launchd plist and crontab templates.
 Install via `scheduling/install-schedules.sh install` after running the main installer.
+
+## Done when
+
+The briefing file exists at its dated path, every section either has content or is explicitly marked empty, and the last-run timestamp was updated so the next run computes a correct delta.

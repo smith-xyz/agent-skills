@@ -109,3 +109,7 @@ Write flat functions: guard clauses first, early `return` or `continue`, then se
 - Structure control flow with guard clauses, early return, and `for...of`
 - Guard `unknown`, inject deps, externalize config
 - Pick the matching Promise helper, cancellation, concurrency tool, and `Result` or boundary try/catch
+
+## Done when
+
+This is a reference, not a routine. It is satisfied when the TypeScript you wrote or reviewed follows the typing, module, and async patterns above — and any deliberate deviation is called out with a reason.

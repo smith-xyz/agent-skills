@@ -5,7 +5,7 @@ set -euo pipefail
 
 usage() {
   cat <<EOF
-Usage: $(basename "$0") --vendor <cursor|agents|claude|codex> --source <file.md> --dest <path>
+Usage: $(basename "$0") --vendor <cursor|agents|claude|codex|opencode> --source <file.md> --dest <path>
 
 Source frontmatter: name, description, model_tier, readonly (optional).
 Body becomes prompt / developer_instructions.
@@ -31,8 +31,8 @@ done
 [[ -f "$source" ]] || { echo "Error: source not found: $source" >&2; exit 1; }
 
 case "$vendor" in
-  cursor|agents|claude|codex|vscode) ;;
-  *) echo "Error: vendor must be cursor, agents, claude, codex, or vscode" >&2; exit 1 ;;
+  cursor|agents|claude|codex|opencode|vscode) ;;
+  *) echo "Error: vendor must be cursor, agents, claude, codex, opencode, or vscode" >&2; exit 1 ;;
 esac
 
 extract_frontmatter() {
@@ -59,9 +59,9 @@ fm_field() {
 model_for_tier() {
   local tier=$1
   case "$vendor:$tier" in
-    cursor:fast|agents:fast|vscode:fast) echo "fast" ;;
-    cursor:standard|agents:standard|vscode:standard) echo "composer-2.5" ;;
-    cursor:inherit|agents:inherit|cursor:*|agents:*|vscode:inherit|vscode:*) echo "inherit" ;;
+    cursor:fast|agents:fast) echo "fast" ;;
+    cursor:standard|agents:standard) echo "composer-2.5" ;;
+    cursor:inherit|agents:inherit|cursor:*|agents:*) echo "inherit" ;;
 
     claude:fast) echo "haiku" ;;
     claude:standard) echo "sonnet" ;;
@@ -70,6 +70,19 @@ model_for_tier() {
     codex:fast) echo "gpt-5.4-mini" ;;
     codex:standard) echo "gpt-5.4" ;;
     codex:inherit|codex:*) echo "" ;;
+
+    # OpenCode uses provider/model-id format. Omitting model lets the agent
+    # inherit from the primary agent that invokes it (subagents) or from the
+    # global config (primary agents).
+    opencode:fast) echo "anthropic/claude-haiku-4-20250514" ;;
+    opencode:standard) echo "anthropic/claude-sonnet-4-20250514" ;;
+    opencode:inherit|opencode:*) echo "" ;;
+
+    # VS Code resolves models by display name ("GPT-5 (copilot)"), which varies
+    # by plan and release. Emitting a name we can't verify would silently break
+    # the agent, so tier is dropped and the model picker default applies.
+    # Override per agent by adding `model:` to the rendered file.
+    vscode:*) echo "" ;;
   esac
 }
 
@@ -96,15 +109,36 @@ render_markdown() {
   local out=$1
   {
     echo "---"
-    echo "name: $name"
-    echo "description: $description"
-    if [[ -n "$model" && "$model" != "inherit" ]]; then
-      echo "model: $model"
-    elif [[ "$model" == "inherit" ]]; then
-      echo "model: inherit"
-    fi
-    if [[ "$readonly" == "true" ]]; then
-      echo "readonly: true"
+    # OpenCode uses 'description' (required) and 'mode' instead of 'name'.
+    # The filename becomes the agent name in OpenCode.
+    if [[ "$vendor" == "opencode" ]]; then
+      echo "description: $description"
+      echo "mode: subagent"
+      if [[ -n "$model" && "$model" != "inherit" ]]; then
+        echo "model: $model"
+      fi
+      if [[ "$readonly" == "true" ]]; then
+        echo "permission:"
+        echo "  edit: deny"
+      fi
+    else
+      echo "name: $name"
+      echo "description: $description"
+      if [[ -n "$model" && "$model" != "inherit" ]]; then
+        echo "model: $model"
+      elif [[ "$model" == "inherit" ]]; then
+        echo "model: inherit"
+      fi
+      if [[ "$readonly" == "true" ]]; then
+        # VS Code has no `readonly` property — it scopes capability via `tools`.
+        # Omitting `edit` is what makes the agent read-only; `execute` stays so
+        # verify-style agents can still run tests.
+        if [[ "$vendor" == "vscode" ]]; then
+          echo "tools: [read, search, execute, web, todo]"
+        else
+          echo "readonly: true"
+        fi
+      fi
     fi
     echo "---"
     echo "$body"

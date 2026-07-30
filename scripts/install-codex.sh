@@ -14,6 +14,9 @@ case "$ACTION" in
     install_hooks "$VENDOR"
     install_scheduling
 
+    if is_workspace_target; then
+      echo "  settings + execpolicy + MCP: skipped (workspace target)"
+    else
     # Settings → ~/.codex/config.toml
     toml_target="$HOME/.codex/config.toml"
     mkdir -p "$(dirname "$toml_target")"
@@ -47,6 +50,7 @@ case "$ACTION" in
     else
       echo "$rendered" >> "$toml_target"
       echo "  MCP servers → $toml_target"
+    fi
     fi
 
     cleanup_stale "$VENDOR"

@@ -35,7 +35,7 @@ One paragraph describing what this task achieves.
 ## Fields
 
 | Field | Required | Purpose |
-|-------|----------|---------|
+| ------- | ---------- | --------- |
 | `Agent:` | Yes | Which subagent to dispatch (e.g. `go-dev`, `typescript-dev`) |
 | `Depends on:` | No | Prerequisite task IDs (comma-separated) |
 | `Model hint:` | No | Complexity hint for model routing (`fast`, `standard`, `complex`) |

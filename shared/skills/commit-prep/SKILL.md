@@ -49,3 +49,7 @@ One-line scoped conventional commit: `<type>(<scope>): <description>`
 - Do not commit, push, or modify any files.
 - If nothing staged, say so and stop.
 - Match existing commit style when log shows a clear pattern.
+
+## Done when
+
+The commit message is drafted and shown to the user. Nothing was staged, committed, pushed, or modified. If nothing was staged to begin with, you said so and stopped.

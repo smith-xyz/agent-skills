@@ -14,15 +14,29 @@ STALE_SKILLS=(
   project-scaffold prose-refine fact-check multi-review
   adversarial-review reproduce-issue find-issues jira
   credentials gh-project-workflow pqc-readiness brainstorm
-  qodo-review
+  qodo-review artifact-ingest triage
 )
 
 vendor_home() {
   if [ -n "$INSTALL_HOME" ]; then
     echo "$INSTALL_HOME"
-  else
-    echo "$HOME/.$1"
+    return
   fi
+  case "$1" in
+    # VS Code Copilot reads personal customizations from ~/.copilot, not
+    # ~/.vscode (which holds extensions and CLI state).
+    vscode)   echo "$HOME/.copilot" ;;
+    # OpenCode uses XDG-style config at ~/.config/opencode.
+    opencode) echo "$HOME/.config/opencode" ;;
+    *)        echo "$HOME/.$1" ;;
+  esac
+}
+
+# True when installing to an explicit --target/INSTALL_HOME rather than the
+# real vendor home. Global vendor config (settings.json, MCP, execpolicy) must
+# never be written in that case.
+is_workspace_target() {
+  [ -n "$INSTALL_HOME" ]
 }
 
 _install_item() {
@@ -47,11 +61,7 @@ install_skills() {
   local vendor=$1
   local target src_dir
   target="$(vendor_home "$vendor")/skills"
-  src_dir="$VENDORS/$vendor/skills"
-  # Fall back to shared/ if vendor skills not rendered (skills need no transformation)
-  if [ ! -d "$src_dir" ]; then
-    src_dir="$SHARED/skills"
-  fi
+  src_dir="$SHARED/skills"
   [ -d "$src_dir" ] || return
   mkdir -p "$target"
   for src in "$src_dir/"*/; do
@@ -84,36 +94,54 @@ remove_skills() {
 
 # --- Agents ---
 
+agents_target() {
+  echo "$(vendor_home "$1")/agents"
+}
+
+# Vendor-specific filename for a rendered agent. VS Code only recognizes user
+# agents with the .agent.md suffix; Codex wants TOML.
+agent_basename() {
+  local vendor=$1 base=$2
+  case "$vendor" in
+    codex)  echo "${base%.md}.toml" ;;
+    vscode) echo "${base%.md}.agent.md" ;;
+    *)      echo "$base" ;;
+  esac
+}
+
 install_agents() {
   local vendor=$1
-  local target src_dir
-  target="$(vendor_home "$vendor")/agents"
-  src_dir="$VENDORS/$vendor/agents"
-  [ -d "$src_dir" ] || { echo "  agents: run 'make render' first"; return 1; }
+  local target
+  target="$(agents_target "$vendor")"
+  [ -d "$SHARED/agents" ] || return 0
   mkdir -p "$target"
-  for f in "$src_dir/"*; do
+  local count=0
+  for f in "$SHARED/agents/"*.md; do
     [ -e "$f" ] || continue
     local base
     base=$(basename "$f")
-    if [ "$INSTALL_MODE" = "link" ] && [ -e "$target/$base" ] && [ ! -L "$target/$base" ]; then
+    [[ "$base" == "README.md" ]] && continue
+    base=$(agent_basename "$vendor" "$base")
+    if [ -e "$target/$base" ] && [ ! -L "$target/$base" ] && [ "$INSTALL_MODE" = "link" ]; then
       echo "  SKIP native: $base"
       continue
     fi
-    _install_item "$f" "$target/$base"
+    "$REPO_ROOT/scripts/render-agent.sh" --vendor "$vendor" --source "$f" --dest "$target/$base"
+    count=$((count + 1))
   done
-  echo "  agents → $target ($INSTALL_MODE)"
+  echo "  agents → $target ($count rendered)"
 }
 
 remove_agents() {
   local vendor=$1
   local target
-  target="$(vendor_home "$vendor")/agents"
+  target="$(agents_target "$vendor")"
   for src in "$SHARED/agents/"*.md; do
     [ -e "$src" ] || continue
     local base
     base=$(basename "$src")
     [[ "$base" == "README.md" ]] && continue
-    [[ "$vendor" == "codex" ]] && base="${base%.md}.toml"
+    base=$(agent_basename "$vendor" "$base")
     local dest="$target/$base"
     if [ -L "$dest" ] || [ -f "$dest" ]; then
       rm -f "$dest" && echo "  removed agent: $base"
@@ -121,41 +149,61 @@ remove_agents() {
   done
 }
 
-# --- Rules (vendor-specific, e.g. vendors/cursor/rules/*.mdc) ---
+# --- Rules (canonical source: shared/rules/*.mdc, rendered per vendor) ---
+
+# Where a vendor expects its global rules to land.
+rules_target() {
+  case "$1" in
+    cursor)   echo "$(vendor_home cursor)/rules" ;;
+    claude)   echo "$(vendor_home claude)/CLAUDE.md" ;;
+    codex)    echo "$(vendor_home codex)/AGENTS.md" ;;
+    opencode) echo "$(vendor_home opencode)/AGENTS.md" ;;
+    vscode)   echo "$(vendor_home vscode)/instructions" ;;
+    *)        echo "" ;;
+  esac
+}
+
+# Vendors whose rules_target is a directory of per-rule files rather than one
+# concatenated file.
+rules_target_is_dir() {
+  [[ "$1" == "cursor" || "$1" == "vscode" ]]
+}
 
 install_rules() {
   local vendor=$1
-  local src="$VENDORS/$vendor/rules"
   local target
-  target="$(vendor_home "$vendor")/rules"
-  [ -d "$src" ] || return
-  mkdir -p "$target"
-  for f in "$src/"*; do
-    [ -e "$f" ] || continue
-    local base
-    base=$(basename "$f")
-    if [ "$INSTALL_MODE" = "link" ] && [ -e "$target/$base" ] && [ ! -L "$target/$base" ]; then
-      echo "  SKIP native: $base"
-      continue
-    fi
-    _install_item "$f" "$target/$base"
-  done
-  echo "  rules → $target ($INSTALL_MODE)"
+  target="$(rules_target "$vendor")"
+  [ -n "$target" ] || return 0
+  [ -d "$SHARED/rules" ] || return 0
+
+  # Cursor takes .mdc files verbatim; every other vendor gets a single
+  # concatenated file with frontmatter stripped.
+  "$REPO_ROOT/scripts/render-rules.sh" "$vendor" --dest "$target" >/dev/null
+  echo "  rules → $target"
 }
 
 remove_rules() {
   local vendor=$1
-  local src="$VENDORS/$vendor/rules"
   local target
-  target="$(vendor_home "$vendor")/rules"
-  [ -d "$src" ] || return
-  for f in "$src/"*; do
-    [ -e "$f" ] || continue
-    local dest="$target/$(basename "$f")"
-    if [ -L "$dest" ] || [ -f "$dest" ]; then
-      rm -f "$dest" && echo "  removed rule: $(basename "$f")"
-    fi
-  done
+  target="$(rules_target "$vendor")"
+  [ -n "$target" ] || return 0
+
+  if rules_target_is_dir "$vendor"; then
+    local suffix=".mdc"
+    [ "$vendor" = "vscode" ] && suffix=".instructions.md"
+    for f in "$SHARED/rules/"*.mdc; do
+      [ -e "$f" ] || continue
+      local name
+      name="$(basename "$f" .mdc)$suffix"
+      local dest="$target/$name"
+      if [ -L "$dest" ] || [ -f "$dest" ]; then
+        rm -f "$dest" && echo "  removed rule: $name"
+      fi
+    done
+  elif [ -f "$target" ]; then
+    rm -f "$target" && echo "  removed rules: $target"
+  fi
+  return 0
 }
 
 # --- Hooks ---
@@ -239,12 +287,12 @@ show_installed() {
   home=$(vendor_home "$vendor")
   echo ""
   echo "[$vendor] home=$home mode=$INSTALL_MODE"
-  for dir in skills agents hooks; do
-    local count
-    count=$(ls -1 "$home/$dir" 2>/dev/null | wc -l | tr -d ' ')
+  for dir in skills agents hooks lib; do
+    local count=0
+    [ -d "$home/$dir" ] && count=$(ls -1 "$home/$dir" | wc -l | tr -d ' ')
     echo "  $dir: $count items"
   done
-  local rc
-  rc=$(ls -1 "$home/rules" 2>/dev/null | wc -l | tr -d ' ')
+  local rc=0
+  [ -d "$home/rules" ] && rc=$(ls -1 "$home/rules" | wc -l | tr -d ' ')
   echo "  rules: $rc items"
 }

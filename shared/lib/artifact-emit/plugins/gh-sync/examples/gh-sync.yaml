@@ -1,8 +1,0 @@
-github:
-  repos:
-    - "@me"
-gitlab:
-  instance_url: https://gitlab.example.com
-  projects:
-    - my-group/my-project
-  token_env: GITLAB_TOKEN

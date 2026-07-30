@@ -55,7 +55,7 @@ For advisory clusters: produce **one** assessment for the root cause, listing al
 
 Return structured markdown matching this shape:
 
-```
+```text
 ## Security Assessment — <id or cluster>
 
 | Field | Value |

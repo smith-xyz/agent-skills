@@ -9,7 +9,7 @@ You evaluate open PRs and detect duplicates targeting the same issue.
 ## Scoring (0-10)
 
 | Dimension | Weight | Scale |
-|-----------|--------|-------|
+| ----------- | -------- | ------- |
 | Code quality | 40% | Tests, diff size, description |
 | Freshness | 20% | <7d=10, 30d=7, 60d=5, 90d=3, >90d=2 |
 | Review state | 20% | APPROVED=10, CHANGES_REQUESTED=4, none=6 |

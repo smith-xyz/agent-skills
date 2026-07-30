@@ -39,7 +39,7 @@ After round 2: final positions with confidence; mark **consensus** (agree with r
 
 ## Output
 
-```
+```text
 ## Defender — round <N>
 
 ### Response — <challenge-id>

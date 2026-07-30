@@ -16,69 +16,15 @@ Readonly advisory triage. Generic across GitHub repos. Separate from `project-tr
 ## Parameters
 
 | Param | Source |
-|-------|--------|
+| ------- | -------- |
 | `repo` | prompt, or `.triage/<domain>/<repo>/configs/triage.config.yaml`, or `git remote` |
 | `domain` | workspace layout or prompt |
 | `repo_path` | local checkout (required for validate stage) |
 | `output_dir` | `$WORKSPACE/.triage/<domain>/<repo>/ghsa/` |
 | `security_context` | prompt, or a workspace wrapper skill (e.g. `typeorm-ghsa-triage`); optional |
 
-## Artifact: `ghsa-report.md`
-
-One flat table, one row per advisory (not per cluster). Detail sections append below the
-table only once a row enters the Validated/Adversarial/Fix-reviewed stages.
-
-```markdown
-# GHSA Triage — <owner/repo> — <date>
-
-| GHSA | Sev | Summary | Prelim | Validated | Adversarial | Fix reviewed | Disposition | Notes |
-|------|-----|---------|--------|-----------|-------------|--------------|-------------|-------|
-| GHSA-xqq5 | critical | orderBy/groupBy col SQLi | x |  |  |  |  | canonical |
-| GHSA-236h | none | orderBy col SQLi (dup) | x | - | - | - | closed-dupe | dupe_of: GHSA-xqq5 |
-```
-
-**Columns:**
-
-- **Prelim** — fetched + quality-checked. Always `x` after stage 1.
-- **Validated** — code-complexity → impact-repro → security-assess complete.
-- **Adversarial** — red-team/defender pass complete (opt-in).
-- **Fix reviewed** — security-review of a candidate fix diff complete.
-- **Disposition** — `confirmed` / `already-fixed` / `cannot-confirm` / `not-applicable` /
-  `disputed` / `closed-dupe`. Set once the relevant stage renders a verdict.
-- **Notes** — `dupe_of: GHSA-xxxx`, `maintainer: disputes`, `split recommended`, quality flags.
-
-Rows marked `dupe_of:` get `-` in Validated/Adversarial/Fix reviewed — no further pipeline
-work unless the user overrides.
-
-Detail sections (one per validated advisory) append below the table:
-
-````markdown
-## GHSA-xqq5 — orderBy/groupBy col SQLi
-
-### Evidence pack
-`validate-xqq5-pack.json` — match_count / test_hit_count
-
-### Code Complexity
-…
-
-### Impact and Reproducibility
-…
-
-### Security Assessment
-…
-
-### Adversarial (if run)
-…
-
-### Candidate fix review (if run)
-…
-
-### Recommended actions (copy-paste for user)
-```bash
-# example only — never executed by the skill
-gh api -X PATCH repos/<repo>/security-advisories/<ghsa_id> -f state=…
-```
-````
+The report template lives in [references/report-template.md](references/report-template.md);
+a fully worked example is in [references/worked-example.md](references/worked-example.md).
 
 ## Workflow
 
@@ -117,49 +63,18 @@ gh api -X PATCH repos/<repo>/security-advisories/<ghsa_id> -f state=…
    > medium > low, then triage/draft before published/closed. Mark Prelim `x` for all rows.
 8. Present the table and **stop** — wait for the user to pick row(s) to validate.
 
-### Stage 2: Validate (on request, per advisory)
+### Stages 2-4
 
-Sequential dispatch — do not parallelize (avoids triple full-tree reads):
+Each runs only on explicit request, on rows you pick from the table.
 
-1. Load the advisory (full description) + `repo_path` + `security_context`.
-2. Extract search terms (API/method/file identifiers from summary + description) to
-   `$output_dir/validate-<id>-terms.txt`.
-3. Build an evidence pack: `rg` the terms against `src/` and `test/` in `repo_path`,
-   write match/test-hit counts to `$output_dir/validate-<id>-pack.json`.
-4. Dispatch `code-complexity` (Task, `readonly: true`, `subagent_type` matching agent name,
-   tier as registered — **never override model**). Pass: advisory, `repo_path`,
-   `security_context`, evidence pack.
-5. Dispatch `impact-repro` with the above + code-complexity output.
-6. Dispatch `security-assess` with the above + impact-repro output.
-7. Append the detail section under the table. Update the row: Validated `x`, Disposition
-   from security-assess verdict.
+| Stage | Trigger | What it does |
+| ------- | --------- | -------------- |
+| 2 — Validate | You name a row | Sequential dispatch: `code-complexity`, then `impact-repro`, then `security-assess`, each fed the previous output plus an evidence pack |
+| 3 — Adversarial | "I'm not convinced", "double check" | `red-team` vs `defender`, up to two rounds; disputes set Disposition to `disputed` |
+| 4 — Candidate fix | Advisory has a private fork with commits | Fetch readonly, run `security-review` on the branch diff, fold findings into the row |
 
-### Stage 3: Adversarial (opt-in, on request)
-
-Only when the user asks for a skeptical second pass ("I'm not convinced", "double check").
-
-1. Round 1: `red-team` (assessment outputs + pack) → `defender` (challenges).
-2. Round 2: same, unless round 1 reaches full consensus.
-3. Append Consensus/Disputed to the detail section. Update row: Adversarial `x`; if
-   disputed, set Disposition to `disputed`.
-
-### Stage 4: Candidate-fix bridge (when applicable)
-
-If the advisory has `private_fork.full_name` with commits beyond its base:
-
-1. Add remote if missing, `git fetch` (readonly).
-2. Prepare so `security-review` can see branch changes (follow `review-security` skill).
-3. Launch `security-review` with the prompt below, then fold the resulting
-   Severity/Location/Finding table into the detail section and update the row: Fix
-   reviewed `x`.
-
-```text
-Full Repository Path: <repo_path>
-Diff: branch changes
-Custom Instructions: Review candidate fix for <GHSA-id> (<summary>). Confirm the diff closes the described sink; flag incomplete fixes and residual injection paths.
-```
-
-If no fork or no fix commits: skip, note "no candidate fix in private fork".
+Full dispatch procedure, agent inputs, and the fix-review prompt are in
+[references/stages.md](references/stages.md).
 
 ### Relay
 
@@ -181,31 +96,13 @@ advisories or push branches.
 ## Agents used
 
 | Agent | Role | `model_tier` | Stage |
-|-------|------|--------------|-------|
+| ------- | ------ | -------------- | ------- |
 | `code-complexity` | sink lines, tests, fix size | `fast` | validate (1st) |
 | `impact-repro` | repro quality, mitigability | `standard` | validate (2nd) |
 | `security-assess` | CVSS, verdict, reachability | `inherit` | validate (3rd) |
 | `red-team` / `defender` | skeptical second pass | `inherit` | adversarial (opt-in) |
 | `security-review` | review private-fork fix diff | (own def) | fix bridge (when fork has commits) |
 
-## Artifact Emission
+## Done when
 
-emits: ghsa-triage
-
-After completing validation/adversarial stages for a GHSA, emit a structured record:
-
-```bash
-artifact emit --kind ghsa-triage --domain <domain> --repo <org/repo> \
-  --id "<GHSA-ID>" \
-  --title "<GHSA-ID> — <short description>" \
-  --status <needs-me|active|waiting|done> \
-  --next "<what user should do next, or omit if nothing>" \
-  --source ghsa-triage \
-  --data '{"ghsa_id": "<ID>", "severity": "<critical|high|medium|low|none>", "cvss": <float>, "stage": "<prelim|validated|adversarial|fix-reviewed>", "disposition": "<confirmed|closed-dupe|published|dismissed>", "notes": "<brief note max 300 chars>"}'
-```
-
-At session end, emit suggestions for schema gaps or next actions:
-
-```bash
-artifact suggest --source-skill ghsa-triage --text "<suggestion>"
-```
+Every advisory in scope has a verdict with a cited affected version range, exploitability is stated with reasoning rather than asserted, and the report distinguishes confirmed impact from unverified upstream claims.

@@ -1,9 +1,0 @@
-kind: research-memo
-version: 1
-description: Research findings — structured verdict, not prose
-fields:
-  verdict: { type: string, required: true, max: 300 }
-  confidence: { type: enum, required: true, values: [high, medium, low] }
-  gap: { type: string, max: 300 }
-  source_count: { type: integer }
-  rounds: { type: integer }

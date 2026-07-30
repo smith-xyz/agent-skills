@@ -1,213 +1,215 @@
 # agent-skills
 
-Personally curated [Agent Skills](https://agentskills.io/) and subagents for Cursor, Claude Code, VS Code, and Codex.
+A gated agent workflow. One canonical set of skills, agents, and rules, plus a
+binary that enforces how they get used — across Claude Code, VS Code Copilot,
+and Cursor.
 
-https://github.com/smith-xyz/agent-skills
+<https://github.com/smith-xyz/agent-skills>
 
-## Mental model
+## Why this exists
 
-| Layer | Use for |
-| ----- | ------- |
-| Skills (`shared/skills/<name>/`) | Workflows, conventions, and patterns. Invoke with `/skill-name` or let agent auto-apply. |
-| Agents (`shared/agents/*.md`) | Separate context, optional `readonly`. Delegated work with their own context window. |
+Four problems, in the order they bite:
 
-Skills hold the substance; agents delegate bounded tasks. All skills use `disable-model-invocation: true` for explicit-only invocation unless they should auto-apply (e.g. language patterns).
+1. **Skills didn't travel.** Each vendor had its own copy, they drifted, and
+   using them was sporadic and easy to forget.
+2. **Nothing forced work through them.** Skills were available, not required.
+3. **Prompting is habit-forming.** It is easy to keep asking for one more small
+   change and lose the ability to write it yourself.
+4. **Agent output sprawled.** Artifacts landed everywhere, which is unworkable
+   in a monorepo.
 
-## Layout
+The fix is structural, not aspirational: a single install target, and gates
+with real teeth.
 
+## How it works
+
+Each vendor reads its own home, so `shared/` is rendered into each one:
+
+| Vendor | Home | Rules land as |
+| ------ | ---- | ------------- |
+| Claude Code | `~/.claude/` | `CLAUDE.md` |
+| VS Code Copilot | `~/.copilot/` | `instructions/*.instructions.md` |
+| Cursor | `~/.cursor/` | `rules/*.mdc` |
+| Codex | `~/.codex/` | `AGENTS.md` |
+
+VS Code also reads `~/.claude/` for hooks and CLAUDE.md, which is why the gates
+only have to be wired once. Everything else is vendor-specific: agents need the
+`.agent.md` suffix, and rules become one instruction file per rule so each keeps
+its own `applyTo` scope instead of loading on every request.
+
+`agent-gate` is a dependency-free Go binary wired to lifecycle hooks. It
+normalizes each vendor's payload format and makes the same decision everywhere.
+
+| Gate | Event | What it does |
+| ------ | ------- | -------------- |
+| Catalog | `SessionStart` | Injects the skill index and this repo's profiles, so you don't have to remember them |
+| Contract | `UserPromptSubmit` | States the routing rule: research is free, execution needs a claimed skill |
+| **Route** | `PreToolUse` | **Denies** any edit until a skill or subagent is claimed |
+| **Complexity** | `PreToolUse` | **Denies** small, high-judgement edits in your sharpen languages and hands them back to you |
+| **Containment** | `PreToolUse` | **Denies** new markdown outside `.agent/` |
+| Report | `Stop` | Records what happened for `agent-gate report` |
+
+Reading, searching, and running tests are never gated. The gates fire only on
+tools that modify the workspace.
+
+### The handoff card
+
+When the complexity gate fires, you get an actionable card rather than a wall:
+
+```text
+YOU WRITE THIS.
+
+  file:    internal/scheduler/queue.go
+  do:      impl-plan — add backpressure — bounded chan, drop-oldest
+  read:    skill go-patterns
+  verify:  go test ./internal/scheduler
+  why:     2-line change in a sharpen language (threshold 40)
 ```
-shared/                      Portable content (works across all vendors)
-  skills/<name>/               SKILL.md + scripts, references, assets
-  agents/*.md                  Subagent definitions (model_tier, rendered per vendor)
-  rules/global.md              Canonical global rules (rendered per vendor)
-  mcp/mcp.json                 Canonical MCP server config (rendered per vendor)
-  hooks/                       Portable hook scripts
-  scheduling/                  launchd/crontab templates
 
-vendors/                     Vendor-specific config
-  cursor/
-    permissions.json             IDE terminal + MCP allowlists
-    cli-config.json              CLI allow/deny (Shell, Read, Write, Mcp)
-  claude/
-    settings.json                Permissions (allow/deny/ask), model selection
-  codex/
-    config.toml                  Model, sandbox mode
-    rules/default.rules          Starlark execpolicy (allow/deny/prompt)
-  vscode/
-    settings.json                Terminal auto-approve, sandbox, permissions
+Each file bounces at most once per session, so you are never trapped in a loop.
 
-scripts/                     Installers + renderers
+Genuinely need the agent? `agent-gate override --reason "..."`. It works
+immediately, and it shows up in every report — friction, not a wall.
+
+### Seeing the ratio
+
+```bash
+make gate-report
 ```
 
-### MCP Servers
+```text
+REPO                     AI EDITS  BOUNCED OVERRIDE   AI LINES
+proj                            3        5        1          6
 
-Canonical config: `shared/mcp/mcp.json`. Rendered per vendor on install.
-
-| Server | Source | Provides |
-| ------ | ------ | -------- |
-| GitHub | Official (31k stars, GA) | PRs, issues, CI, notifications, projects |
-| Atlassian | Official (GA) | Jira issues, search, OAuth auth |
-| DigitalOcean | Official (DO Labs) | Droplets, App Platform, DNS, databases |
-| Kubernetes | OSS (Red Hat-adjacent) | Cluster access, pods, logs. `--read-only` mode. |
-| Context7 | Community (Upstash) | Version-specific library docs lookup |
-| Terraform | Official (HashiCorp) | Registry docs, provider schemas. Docker install. |
-| AWS | Official (preview) | Any AWS API, sandboxed scripts, doc search |
-
-### Per-vendor install targets
-
-| Asset | Cursor | Claude Code | Codex | VS Code |
-| ----- | ------ | ----------- | ----- | ------- |
-| MCP | `~/.cursor/mcp.json` | `~/.claude.json` (merged) | `~/.codex/config.toml` | `~/.vscode/mcp.json` |
-| Rules | `~/.cursor/rules/global.mdc` | `~/.claude/CLAUDE.md` | `~/.codex/AGENTS.md` | `~/.copilot/instructions/global.instructions.md` |
-| Permissions | `~/.cursor/permissions.json` + `cli-config.json` | `~/.claude/settings.json` | `~/.codex/config.toml` + `rules/*.rules` | VS Code `settings.json` (merged) |
-| Skills | `~/.cursor/skills/` | `~/.claude/skills/` | `~/.codex/skills/` | — |
-| Agents | `~/.cursor/agents/` | `~/.claude/agents/` | `~/.codex/agents/` | `~/.copilot/agents/` |
-| Hooks | `~/.cursor/hooks/` | `~/.claude/hooks/` | `~/.codex/hooks/` | — |
-
-### Skills (explicit invocation)
-
-| Skill | Purpose |
-| ----- | ------- |
-| `coding-practice` | Generate no-AID coding practice sessions |
-| `commit-prep` | Branch name, conventional commit message, PR body from staged changes |
-| `ghsa-triage` | Fetch/cluster GitHub Security Advisories; validate with sink evidence; opt-in adversarial pass |
-| `morning-briefing` | Morning digest via GitHub/Atlassian MCP + transcript history |
-| `orchestrate` | Generic project loop — DAG, dispatch, verify, iterate |
-| `project-triage` | Issue/PR triage pipeline — labels, backlog plans, PR scoring |
-| `sniff-bugs` | Hunt logic gaps, error-path holes, leaks, concurrency, observability misses |
-| `triage` | Issue/PR triage via GitHub MCP — score, classify, render reports |
-| `verify-gate` | Composable hook helper for post-turn compile/lint/test verification |
-| `work-review` | Summarize work from transcripts; optional Jira mapping |
-
-### Skills (auto-apply by agent)
-
-| Skill | Purpose |
-| ----- | ------- |
-| `go-patterns` | Go conventions, errors, concurrency |
-| `python-patterns` | Python OOP, pydantic, type hints |
-| `react-patterns` | React components, hooks, providers |
-| `rust-patterns` | Rust modules, error handling, traits |
-| `typescript-patterns` | TypeScript strict types, async, DI |
-| `openshift-debug` | OpenShift cluster debugging |
-| `pr-comments` | Fetch PR review comments (human + bots); Qodo/CodeRabbit notes |
-| `arxiv-ai-scan` | arXiv paper search |
-
-## Skill Map
-
-<!-- BEGIN SKILL MAP -->
-```mermaid
-graph TD
-  subgraph explicit [Skills — explicit invocation]
-    coding_practice["coding-practice"]
-    commit_prep["commit-prep"]
-    ghsa_triage["ghsa-triage"]
-    morning_briefing["morning-briefing"]
-    orchestrate["orchestrate"]
-    project_triage["project-triage"]
-    sniff_bugs["sniff-bugs"]
-    triage["triage"]
-    verify_gate["verify-gate"]
-    work_review["work-review"]
-  end
-  subgraph auto [Skills — auto-apply]
-    arxiv_ai_scan["arxiv-ai-scan"]
-    go_patterns["go-patterns"]
-    openshift_debug["openshift-debug"]
-    python_patterns["python-patterns"]
-    pr_comments["pr-comments"]
-    react_patterns["react-patterns"]
-    rust_patterns["rust-patterns"]
-    typescript_patterns["typescript-patterns"]
-  end
-  subgraph mcp [MCP Servers]
-    GitHub["GitHub MCP"]
-    Atlassian["Atlassian MCP"]
-    DigitalOcean["DigitalOcean MCP"]
-    Kubernetes["Kubernetes MCP"]
-    Context7["Context7 MCP"]
-    Terraform["Terraform MCP"]
-    AWS["AWS MCP"]
-  end
-  subgraph agents_graph [Agents]
-    agent_code_complexity(["code-complexity ⓡ"])
-    agent_defender(["defender ⓡ"])
-    agent_go_dev["go-dev"]
-    agent_impact_repro(["impact-repro ⓡ"])
-    agent_openshift_debug(["openshift-debug ⓡ"])
-    agent_orchestrator["orchestrator"]
-    agent_python_dev["python-dev"]
-    agent_react_dev["react-dev"]
-    agent_red_team(["red-team ⓡ"])
-    agent_researcher(["researcher ⓡ"])
-    agent_rust_dev["rust-dev"]
-    agent_security_assess(["security-assess ⓡ"])
-    agent_typescript_dev["typescript-dev"]
-    agent_verifier(["verifier ⓡ"])
-    agent_work_review(["work-review ⓡ"])
-  end
-  morning_briefing -.-> work_review
-  orchestrate --> agent_researcher
-  orchestrate --> agent_verifier
-  orchestrate -.-> sniff_bugs
-  ghsa_triage --> agent_security_assess
-  ghsa_triage --> agent_impact_repro
-  ghsa_triage --> agent_code_complexity
-  ghsa_triage -.-> agent_red_team
-  ghsa_triage -.-> agent_defender
-  ghsa_triage -->|"advisory fetch via"| GitHub
-  project_triage -->|"issue/PR fetch via"| GitHub
-  react_patterns -.-> typescript_patterns
-  sniff_bugs -.-> go_patterns
-  sniff_bugs -.-> python_patterns
-  sniff_bugs -.-> rust_patterns
-  sniff_bugs -.-> typescript_patterns
-  typescript_patterns -.-> react_patterns
-  verify_gate --> agent_verifier
-  agent_go_dev --> go_patterns
-  agent_openshift_debug --> openshift_debug
-  agent_orchestrator --> orchestrate
-  agent_python_dev --> python_patterns
-  agent_react_dev --> react_patterns
-  agent_react_dev --> typescript_patterns
-  agent_rust_dev --> rust_patterns
-  agent_typescript_dev --> react_patterns
-  agent_typescript_dev --> typescript_patterns
-  agent_work_review --> work_review
-  morning_briefing -->|"GH queries via"| GitHub
-  morning_briefing -->|"Jira queries via"| Atlassian
-  triage -->|"issue/PR fetch via"| GitHub
-  openshift_debug -->|"cluster access via"| Kubernetes
-  orchestrate -->|"task source via"| GitHub
+Bounce rate: 5/8 (62%) of mutating calls came back to you.
 ```
-<!-- END SKILL MAP -->
+
+If the bounce rate is zero, the thresholds are wrong.
 
 ## Installation
 
 ```bash
 git clone git@github.com:smith-xyz/agent-skills.git
 cd agent-skills
-make install-deps      # once: brew install gh jq openshift-cli
-make install-cursor    # or: install-claude, install-codex, install-vscode
-make remove-cursor     # uninstall
+make install-deps      # once: brew install gh jq
+make install-vscode    # skills, agents, rules → ~/.copilot/, MCP → user profile
+make install-gates     # builds agent-gate, wires hooks for every vendor
+make gate-doctor       # verify the wiring is live
 ```
 
-Each vendor has its own script at `scripts/install-<vendor>.sh`. Shared content (rules, MCP) renders from canonical sources via `scripts/render-*.sh`.
+Run the installer for each vendor you actually use — `install-vscode`,
+`install-claude`, `install-cursor`, `install-codex`. They are independent and
+all read the same `shared/` tree.
 
-After install, set env vars: `GITHUB_PERSONAL_ACCESS_TOKEN`, `DIGITALOCEAN_API_TOKEN`, AWS creds.
+Settings are the one thing not installed automatically. User `settings.json` is
+JSONC and often a symlink into a dotfiles repo, so merging it programmatically
+either fails to parse or clobbers tracked files. Copy the keys from
+`vendors/vscode/settings.json` by hand.
 
-### Permissions
+**Codex has no hook support.** It gets the skills and rules but none of the
+gates. Treat it as ungated.
 
-Each vendor has its own permission model. Source files live in `vendors/<vendor>/`:
+Uninstall with `make remove-gates` (leaves the binary and your ledger) or
+`make remove-vscode`.
+
+### Configuration
+
+`~/.agent-skills/gates.json`:
+
+```json
+{
+  "sharpen": ["go", "rust"],
+  "assist_only": ["yaml", "json", "md", "tf"],
+  "max_hand_lines": 40,
+  "repos": {
+    "scratch-repo": { "complexity_gate": false }
+  }
+}
+```
+
+`sharpen` languages bounce. `assist_only` never do. Per-repo overrides let
+throwaway and infra repos opt out without weakening the default.
+
+Repo identity resolves from the **target file's** path, not the working
+directory — so opening a monorepo root still attributes work to the right
+project.
+
+## Layout
+
+```text
+shared/                  Canonical content — the single source of truth
+  skills/<name>/           SKILL.md, plus scripts/ and references/
+  agents/*.md              Subagent definitions
+  rules/*.mdc              Global rules, rendered per vendor
+  mcp/mcp.json             MCP server config
+  hooks/                   Portable hook scripts
+  scheduling/              launchd/cron for the morning briefing
+
+tools/agent-gate/        The gate engine (Go, no dependencies)
+vendors/<vendor>/        Vendor config only: permissions, settings, sandbox
+scripts/                 Installers and renderers
+```
+
+There is no intermediate render stage. Installers read `shared/` and write to
+the vendor target directly — the old committed per-vendor copies were the
+source of every drift bug this repo had.
+
+## Skills
+
+The catalog is injected at session start, so it is not duplicated here. To
+list it:
+
+```bash
+agent-gate catalog
+```
+
+Skills follow a rubric — triggerable, a routine, repeatable, focused,
+verifiable, portable, distinct. Two skills maintain it:
+
+- **`skill-audit`** scores the catalog against the rubric.
+  `bash shared/skills/skill-audit/references/checks.sh` runs the mechanical
+  checks.
+- **`skill-forge`** scaffolds a new skill to the rubric, so the route gate
+  never dead-ends.
+
+Run the audit after adding skills. A hard route into a weak catalog is worse
+than no gate at all.
+
+## The `.agent/` convention
+
+Agent output goes in `.agent/` — `notes/`, `research/`, `plans/`,
+`diagrams/`, `profiles/`. Gitignore it. The containment gate enforces it.
+
+Per-repo **profiles** at `.agent/profiles/<skill>.md` bind a global skill to
+one repo with a defaults table. Global skills carry the routine; profiles carry
+the parameters. This keeps skills free of workspace paths while still being
+concrete where they run.
+
+See `shared/rules/agent-artifacts.mdc`.
+
+## Permissions
 
 | Vendor | File | Controls |
-| ------ | ---- | -------- |
+| -------- | ------ | ---------- |
 | Cursor | `permissions.json` | IDE terminal + MCP auto-run allowlists |
-| Cursor | `cli-config.json` | CLI agent allow/deny (`Shell`, `Read`, `Write`, `Mcp`) |
-| Claude | `settings.json` | Command permissions (allow/deny/ask), model selection |
+| Cursor | `cli-config.json` | CLI allow/deny (`Shell`, `Read`, `Write`, `Mcp`) |
+| Claude | `settings.json` | Command permissions, model selection |
 | Codex | `config.toml` | Model, sandbox mode |
-| Codex | `rules/default.rules` | Starlark execpolicy (allow/deny/prompt per command) |
-| VS Code | `settings.json` | Terminal auto-approve (regex), sandbox, permission level |
+| Codex | `rules/default.rules` | Starlark execpolicy |
+| VS Code | `settings.json` | Terminal auto-approve, sandbox, permission level |
 
-### VS Code cross-vendor detection
+After install, set `GITHUB_PERSONAL_ACCESS_TOKEN` and any other MCP credentials
+you use.
 
-VS Code natively reads `CLAUDE.md`, `AGENTS.md`, and `.claude/agents/`. The VS Code installer detects existing rules and agents from Claude or Codex installs and skips duplicating them. It only installs its own unique pieces (MCP in VS Code format, `settings.json` merge). If no other vendor is installed, rules go to `~/.copilot/instructions/` and agents to `~/.copilot/agents/`.
+## Design notes
+
+- **Gates fail open.** A malformed payload or a crashed engine allows the edit.
+  A bug in the gate must never brick an editing session — which is exactly why
+  `agent-gate doctor` exists, since a silently dead gate is worse than none.
+- **No runtime dependency.** The engine is a static Go binary. The previous
+  system died with `bun: not found`; a gate that stops protecting you when a
+  runtime goes missing is not a gate.
+- **The ledger is JSONL** at `~/.agent-skills/ledger/`, never inside a repo.
+  Greppable, and it keeps the binary dependency-free.
+- **VS Code ignores hook `matcher` values**, so hooks fire on every tool and all
+  matching happens inside the engine. VS Code hooks are Preview and may shift.

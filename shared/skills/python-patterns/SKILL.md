@@ -61,3 +61,7 @@ src/<package>/
 - Logging only meaningful events?
 - Classes have single responsibility?
 - Package layout matches feature boundaries?
+
+## Done when
+
+This is a reference, not a routine. It is satisfied when the Python you wrote or reviewed follows the typing, structure, and error handling patterns above — and any deliberate deviation is called out with a reason.

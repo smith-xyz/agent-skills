@@ -2,7 +2,7 @@
 # Render vendor-specific MCP configs from the canonical mcp/mcp.json.
 #
 # Usage: render-mcp.sh <vendor> [--dest <path>]
-#   vendor: cursor | claude | vscode | codex
+#   vendor: cursor | claude | vscode | codex | opencode
 #   --dest: override output path (default: stdout)
 set -euo pipefail
 
@@ -14,7 +14,7 @@ die() { echo "error: $*" >&2; exit 1; }
 [[ -f "$CANONICAL" ]] || die "canonical config not found: $CANONICAL"
 command -v jq >/dev/null || die "jq required (brew install jq)"
 
-VENDOR="${1:?Usage: render-mcp.sh <cursor|claude|vscode|codex>}"
+VENDOR="${1:?Usage: render-mcp.sh <cursor|claude|vscode|codex|opencode>}"
 shift
 
 DEST=""
@@ -85,7 +85,45 @@ case "$VENDOR" in
     ' "$CANONICAL" | output
     ;;
 
+  opencode)
+    # OpenCode uses { "mcp": { "<name>": { "type": "local"|"remote", ... } } }
+    # - Local servers: "type":"local", "command" merges command+args into array
+    # - Remote servers: "type":"remote", "url", optional "headers"
+    # - Env var syntax: ${VAR} → {env:VAR}
+    jq '{
+      mcp: (
+        .mcpServers | to_entries | map({
+          key: .key,
+          value: (
+            if .value.command then
+              {
+                type: "local",
+                command: ([.value.command] + (.value.args // []))
+              } + (if .value.env then { environment: .value.env } else {} end)
+            elif .value.url then
+              {
+                type: "remote",
+                url: .value.url
+              } + (
+                if .value.headers then
+                  { headers: (.value.headers | to_entries | map({
+                      key: .key,
+                      value: (.value | gsub("\\$\\{(?<v>[^}]+)}"; "{env:\(.v)}"))
+                    }) | from_entries)
+                  }
+                else {}
+                end
+              )
+            else
+              .value
+            end
+          )
+        }) | from_entries
+      )
+    }' "$CANONICAL" | output
+    ;;
+
   *)
-    die "unknown vendor: $VENDOR (expected cursor|claude|vscode|codex)"
+    die "unknown vendor: $VENDOR (expected cursor|claude|vscode|codex|opencode)"
     ;;
 esac

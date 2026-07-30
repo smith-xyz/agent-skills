@@ -41,7 +41,7 @@ For clusters: one assessment for the root cause; list member IDs.
 
 ## Output
 
-```
+```text
 ## Code Complexity — <id or cluster>
 
 | Field | Value |

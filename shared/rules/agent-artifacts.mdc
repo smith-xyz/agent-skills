@@ -1,0 +1,75 @@
+---
+description: "The .agent/ convention: where agent-produced artifacts live and how per-repo profiles bind global skills"
+alwaysApply: true
+---
+
+# The `.agent/` convention
+
+Every repo gets one agent-owned directory. Nothing an agent produces goes
+anywhere else without you asking for it.
+
+```
+.agent/
+  notes/       synthesized notes and their dated archive
+  research/    research memos
+  plans/       implementation plans
+  diagrams/    generated diagrams
+  profiles/    per-repo bindings of global skills
+```
+
+Add `.agent/` to `.gitignore`. It is scratch space and telemetry, not source.
+
+## Why this exists
+
+Agent output used to land wherever the agent felt like putting it — root-level
+markdown, ad-hoc folders, files you did not ask for. That sprawl is what makes
+a monorepo unnavigable. One directory, gitignored, ends it.
+
+The containment gate enforces this: new markdown outside `.agent/`, `docs/`,
+or a pre-existing docs path is denied.
+
+## Writing outside `.agent/`
+
+Allowed without ceremony:
+
+- Editing files that already exist.
+- `README.md` and anything already under `docs/`.
+- Any path the user names explicitly.
+
+Everything else that is *new* markdown belongs in `.agent/`.
+
+## Profiles: binding a global skill to one repo
+
+Global skills carry the routine. Profiles carry the parameters. This is how a
+skill stays portable (no workspace paths in its body) while still being
+concrete in the repo where it runs.
+
+A profile lives at `.agent/profiles/<skill-name>.md` and is a defaults table,
+not a reimplementation:
+
+```markdown
+# ghsa-triage — acme/widget
+
+| Param | Value |
+|-------|-------|
+| repo | acme/widget |
+| repo_path | . |
+| security_context | Node service, Postgres, no direct SQL |
+
+## Repo notes
+
+- The ORM layer wraps all queries; raw SQL only in `src/legacy/`.
+- Advisories against `src/legacy/` are automatically higher severity.
+```
+
+Rules for profiles:
+
+- **Never restate the routine.** If a profile explains *how* to do the work,
+  the global skill is underspecified — fix the skill instead.
+- **Parameters and repo-specific context only.**
+- A profile that grows past a screen is a signal the skill needs a real
+  parameter, not more prose.
+
+Skills read their profile first, before applying defaults. The session-start
+gate lists the profiles present in the current repo, so you can see which
+skills are already bound here.

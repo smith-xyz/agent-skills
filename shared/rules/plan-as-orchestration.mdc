@@ -1,0 +1,28 @@
+---
+description: "Plans are orchestrations — assign every implementation task to a specialist subagent"
+alwaysApply: true
+---
+
+# Plans are orchestrations
+
+When producing a plan (plan mode, impl-plan, or any multi-step implementation breakdown):
+
+1. **Every implementation task** must name a specialist subagent to execute it
+2. Pick the subagent by language/domain:
+
+| Work | Subagent |
+|------|----------|
+| Go code | `go-dev` |
+| TypeScript / Node | `typescript-dev` |
+| React / TSX UI | `react-dev` |
+| Rust code | `rust-dev` |
+| Python code | `python-dev` |
+| Shell / CI / infra | `shell` |
+| Cross-repo / multi-step | `orchestrator` |
+| Research / discovery | `researcher` or `generalPurpose` |
+| Validation / QA | `verifier` |
+
+3. Format each task with: objective, acceptance criteria, subagent type, and relevant skills to load
+4. The plan itself is the orchestration — the planner dispatches, does not implement
+
+Do not leave tasks unassigned. If no specialist fits, use `generalPurpose`.

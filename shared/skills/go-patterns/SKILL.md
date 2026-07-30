@@ -106,3 +106,7 @@ See [references/concurrency.go](references/concurrency.go) for Pool, FanOut, Mer
 - One-time init? → sync.Once
 - Wait for goroutines? → sync.WaitGroup
 - Streaming work? → channels + worker pool
+
+## Done when
+
+This is a reference, not a routine. It is satisfied when the Go you wrote or reviewed follows the structure, error handling, and concurrency patterns above — and any deliberate deviation is called out with a reason.

@@ -26,7 +26,7 @@ Follow the `orchestrate` skill at `skills/orchestrate/SKILL.md` for full workflo
 
 When sending to a specialist agent:
 
-```
+```text
 Task: [id] — [title]
 File: backlog/phase-N/X.Y-name.md
 
@@ -60,7 +60,7 @@ When parsing a completion report:
 
 ## Feedback Loop
 
-```
+```text
 dispatch → mark in_progress → agent implements → parse report
   ↓
   validate honesty of verified_by fields

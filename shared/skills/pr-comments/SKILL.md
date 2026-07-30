@@ -29,7 +29,7 @@ From this skill directory:
 Defaults: **all** review + issue comments on the PR.
 
 | Flag | Effect |
-|------|--------|
+| ------ | -------- |
 | `--format text` | Human-readable instead of JSON |
 | `--bot PATTERN` | Filter to usernames matching PATTERN (case-insensitive) |
 | `--bots` | Filter to known review bots (qodo, coderabbit, codium, …) |
@@ -55,7 +55,7 @@ If a known bot is present, apply the **Bot notes** section when summarizing.
 Classify comments the user wants handled:
 
 | Category | Description | Action |
-|----------|-------------|--------|
+| ---------- | ------------- | -------- |
 | **bug** | Real bug or logic error | Fix required |
 | **security** | Vulnerability or risk | Fix required |
 | **suggestion** | Improvement / style | Evaluate — fix if low-effort and valuable |
@@ -99,3 +99,7 @@ Use `--bot PATTERN` or `--bots`. Same triage rules; no special parsing unless th
 - **No comments**: report empty and stop
 - **Summary only (no inline)**: present summary; note nothing file-scoped to act on
 - **Bot username mismatch**: retry with `--bot PATTERN`
+
+## Done when
+
+Every unresolved comment has been read and addressed or explicitly deferred with a reason. Replies are posted, and no comment thread was silently skipped.

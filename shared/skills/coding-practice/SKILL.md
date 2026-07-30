@@ -45,3 +45,7 @@ Hints or spec clarification only. Do not implement unless asked.
 ## When user pastes a solution
 
 Review briefly. Do not rewrite unless asked.
+
+## Done when
+
+The session paths were reported and the task spec was printed. You have not written any implementation code — the whole point is that the user does. Stop here until they come back with a solution or a question.

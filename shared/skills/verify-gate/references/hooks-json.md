@@ -22,7 +22,7 @@ Cursor hooks fire scripts on agent events. Place `hooks.json` at `.cursor/hooks.
 ## Events
 
 | Event | Fires when | Stdin | Can followup |
-|-------|-----------|-------|-------------|
+| ------- | ----------- | ------- | ------------- |
 | `stop` | Agent turn ends | `{"status": "...", "loop_count": N}` | Yes |
 | `subagentStop` | Subagent completes | Subagent context | Yes |
 | `preToolUse` | Before a tool call | Tool call details | Block via `decision: "block"` |

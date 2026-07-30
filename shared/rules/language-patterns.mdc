@@ -1,0 +1,18 @@
+---
+description: "Enforce language pattern skills when editing code"
+globs: ["**/*.ts", "**/*.tsx", "**/*.go", "**/*.rs", "**/*.py"]
+alwaysApply: false
+---
+
+# Language pattern enforcement
+
+Before editing code, read and follow the relevant pattern skill:
+
+| Glob | Skill to load |
+|------|---------------|
+| `*.ts`, `*.tsx` | `typescript-patterns` — and `react-patterns` if JSX/components |
+| `*.go` | `go-patterns` |
+| `*.rs` | `rust-patterns` |
+| `*.py` | `python-patterns` |
+
+These skills define conventions for this workspace. Always read the skill file before making changes.

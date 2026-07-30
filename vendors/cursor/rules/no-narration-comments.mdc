@@ -1,6 +1,0 @@
----
-description: No narration comments
-alwaysApply: true
----
-
-Never add code comments that merely narrate what code does. Only comment non-obvious intent or constraints. Function signatures and variable names should be self-documenting.

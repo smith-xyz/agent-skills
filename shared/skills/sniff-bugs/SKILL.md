@@ -1,6 +1,10 @@
 ---
 name: sniff-bugs
-description: Hunt logic gaps, error-handling holes, resource leaks, concurrency smells, and observability misses in code. Use when the user asks to sniff bugs, find defects, audit for leaks, or review error paths and debugging gaps.
+description: >-
+  Hunt latent defects in existing code: logic gaps, error-handling holes,
+  resource leaks, concurrency smells, and observability misses. Use when asked
+  to sniff bugs, find defects, audit for leaks, or examine error paths. Targets
+  a code path or module, not a diff — for a pull request, use code-review.
 disable-model-invocation: true
 ---
 
@@ -23,10 +27,8 @@ If a project is named (or inferred from cwd), also load a project checklist when
 
 After the base pass, load an optional project-specific checklist:
 
-1. `<repo>/.cursor/skills/sniff-bugs/references/<project>.md` (preferred — ships with the repo)
+1. `<repo>/.agent/profiles/sniff-bugs.md` (preferred — ships with the repo)
 2. `references/projects/<project>.md` under this skill (fallback)
-
-Example: CRT → `context-reliability-testing/.cursor/skills/sniff-bugs/references/crt.md`
 
 Project checklists add domain failure modes (contracts, worktree leaks, schema drift). They do not replace the base categories.
 
@@ -66,3 +68,7 @@ End with a short **coverage note**: which categories were checked and what was o
 - Separate confirmed defects from hypotheses (mark hypotheses as `likely`).
 - Fix findings when the user asks; default is report-only.
 - Apply language pattern skills (`go-patterns`, `rust-patterns`, `typescript-patterns`, `python-patterns`) for idiomatic fixes.
+
+## Done when
+
+Every finding names a file and line, cites evidence from the implementation, and is marked as either a confirmed defect or a hypothesis. The coverage note states what was checked and what was out of scope. No code was changed unless fixes were requested.

@@ -1,0 +1,19 @@
+---
+description: "Global conduct: communication style, collaboration, code conventions"
+alwaysApply: true
+---
+
+# Global conduct
+
+## Communication
+- Extremely concise; sacrifice grammar for concision
+- Docs: active voice, no cognitive overload
+
+## Collaboration
+- Be critical of ideas to think through issues rigorously
+- Keep humans in control: present options/tradeoffs, confirm risky ops
+- Open questions → answer and review, do not make changes
+
+## Code
+- No narrating comments; comment non-obvious intent/constraints only
+- Never push commits — user always pushes

@@ -16,11 +16,11 @@ Generic project loop. Survey → Target → Dispatch → Verify → Loop/Escalat
 
 ## Quick Start
 
-| Command | What happens |
-|---------|-------------|
-| "run task 1.2" | Read task file, dispatch agent, verify criteria |
-| "run phase 1" | Read all phase-1 tasks, build DAG, dispatch parallel where possible |
-| "run phase 1 then 2" | Sequential phases |
+| Command              | What happens                                                        |
+| -------------------- | ------------------------------------------------------------------- |
+| "run task 1.2"       | Read task file, dispatch agent, verify criteria                     |
+| "run phase 1"        | Read all phase-1 tasks, build DAG, dispatch parallel where possible |
+| "run phase 1 then 2" | Sequential phases                                                   |
 
 ## Prerequisites
 
@@ -29,16 +29,16 @@ Generic project loop. Survey → Target → Dispatch → Verify → Loop/Escalat
 
 ## Scripts
 
-| Script | Purpose |
-|--------|---------|
-| `./scripts/validate-task.sh <task-file>` | Parse acceptance criteria, run executable checks |
-| `./scripts/state.sh read <log>` | Read state log, show task statuses |
-| `./scripts/state.sh append <log> <task> <status> <summary>` | Append entry to state log |
-| `./scripts/check-deps.sh <backlog-dir>` | Parse `Depends on:` fields, output DAG + ready tasks |
+| Script                                                      | Purpose                                              |
+| ----------------------------------------------------------- | ---------------------------------------------------- |
+| `./scripts/validate-task.sh <task-file>`                    | Parse acceptance criteria, run executable checks     |
+| `./scripts/state.sh read <log>`                             | Read state log, show task statuses                   |
+| `./scripts/state.sh append <log> <task> <status> <summary>` | Append entry to state log                            |
+| `./scripts/check-deps.sh <backlog-dir>`                     | Parse `Depends on:` fields, output DAG + ready tasks |
 
 ## The Loop
 
-```
+```text
 ┌─ Survey ─────────────────────────────────────────────┐
 │ Read backlog dir, parse task files, check state log  │
 └──────────────────────────────────────────────────────┘
@@ -78,7 +78,7 @@ Generic project loop. Survey → Target → Dispatch → Verify → Loop/Escalat
 - Max 3 consecutive iterations with no improvement → stop and report
 - After each iteration, log delta:
 
-  ```
+  ```text
   Iteration [N]: [task] — [status]
     Before: [state] | After: [state]
     Files: [list]
@@ -98,45 +98,11 @@ Send agent back: "AC-X: verified_by is not a runtime check. Run [the command] an
 
 On startup, even tasks with `pass` in the state log get re-verified. This catches regressions from later work. If re-verification fails, mark `partial` and dispatch for fix.
 
-## State Log Format
+## Formats and optional gates
 
-See `references/state-log.md`. Append-only, one line per event:
+State log, completion report, and optional quality-gate formats are in
+[references/formats.md](references/formats.md).
 
-```
-2026-07-01T14:30:00Z | 1.2 | pass | 3/3 criteria pass | attempts=1
-```
+## Done when
 
-## Completion Report Format
-
-See `references/completion-report.md`. All `*-dev` agents produce this format when dispatched with acceptance criteria.
-
-## Quality Gates (Optional)
-
-Beyond acceptance criteria, the verify step can dispatch:
-
-- `verifier` agent — skeptical LLM validation of claimed-complete work
-- `sniff-bugs` — defect sweep on modified files
-
-## Artifact Emission
-
-emits: backlog-feature
-
-After dispatching or completing a feature, update its artifact record:
-
-```bash
-artifact emit --kind backlog-feature --domain <domain> \
-  --id "<feature-id>" \
-  --title "<feature-id> — <short description>" \
-  --status <active|done|waiting> \
-  --next "<what's needed next, or omit if done>" \
-  --source orchestrate \
-  --data '{"goal": "<goal-name>", "agent": "<agent-name>", "depends_on": ["<dep1>", "<dep2>"], "attempts": <N>, "notes": "<brief status max 300 chars>"}'
-```
-
-When completing a batch dispatch, emit records for all features in the batch.
-
-At session end:
-
-```bash
-artifact suggest --source-skill orchestrate --text "<next dispatch recommendation or blocker>"
-```
+Every dispatched task either passed its acceptance criteria or is reported as blocked with the specific failure. The loop stopped on a real terminal condition — never on running out of tasks to guess at.

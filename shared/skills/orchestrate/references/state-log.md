@@ -4,13 +4,13 @@ Append-only log tracking task execution history. One line per event.
 
 ## Format
 
-```
+```text
 {ISO-timestamp} | {task_id} | {status} | {summary} | attempts={N}
 ```
 
 ## Examples
 
-```
+```text
 2026-07-01T14:30:00Z | 1.2 | pass | 3/3 criteria pass | attempts=1
 2026-07-01T15:10:00Z | 1.3 | partial | 2/4 criteria pass, AC-3 fail: "go test exit 1" | attempts=2
 2026-07-01T15:45:00Z | 1.1 | blocked | 0/3 criteria pass, blocker: PG not reachable | attempts=3
@@ -20,7 +20,7 @@ Append-only log tracking task execution history. One line per event.
 ## Status Definitions
 
 | Status | Meaning | Orchestrator action |
-|--------|---------|-------------------|
+| -------- | --------- | ------------------- |
 | `pass` | All criteria verified by runtime execution | Move to next task |
 | `partial` | Some criteria pass, some fail | Resume agent with failures |
 | `fail` | Max retries exhausted | Escalate to user |

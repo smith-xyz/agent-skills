@@ -44,7 +44,7 @@ For clusters: one assessment for the root cause; list member IDs.
 
 ## Output
 
-```
+```text
 ## Impact and Reproducibility — <id or cluster>
 
 | Field | Value |
