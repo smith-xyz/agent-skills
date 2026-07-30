@@ -137,6 +137,10 @@ func extractPath(m map[string]any) string {
 	if s := extractString(m, "file_path", "filePath", "path", "target_file", "notebook_path"); s != "" {
 		return s
 	}
+	// OpenCode apply_patch embeds paths in marker lines inside patchText.
+	if s := pathFromPatchText(extractString(m, "patchText", "patch_text")); s != "" {
+		return s
+	}
 	// VS Code editFiles passes a list.
 	for _, k := range []string{"files", "filePaths"} {
 		if v, ok := m[k]; ok {
@@ -150,11 +154,27 @@ func extractPath(m map[string]any) string {
 	return ""
 }
 
+// pathFromPatchText pulls the first path from OpenCode apply_patch markers.
+func pathFromPatchText(patch string) string {
+	for _, line := range strings.Split(patch, "\n") {
+		for _, prefix := range []string{
+			"*** Add File: ", "*** Update File: ", "*** Delete File: ", "*** Move to: ",
+		} {
+			if strings.HasPrefix(line, prefix) {
+				return strings.TrimSpace(strings.TrimPrefix(line, prefix))
+			}
+		}
+	}
+	return ""
+}
+
 // mutatingTools are the exact tool names known to write to disk, across all
-// three vendors.
+// supported vendors.
 var mutatingTools = map[string]bool{
-	// Claude Code
+	// Claude Code / OpenCode
 	"write": true, "edit": true, "multiedit": true, "notebookedit": true,
+	// OpenCode patch tool (underscore form; VS Code uses applypatch)
+	"apply_patch": true,
 	// VS Code Copilot
 	"editfiles": true, "createfile": true, "applypatch": true, "insertedit": true,
 	"createdirectory": true, "editnotebook": true,

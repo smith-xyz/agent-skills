@@ -172,6 +172,7 @@ func skillDirs() []string {
 		filepath.Join(h, ".copilot", "skills"),
 		filepath.Join(h, ".cursor", "skills"),
 		filepath.Join(h, ".agents", "skills"),
+		filepath.Join(h, ".config", "opencode", "skills"),
 	}
 	if cwd, err := os.Getwd(); err == nil {
 		dirs = append(dirs,

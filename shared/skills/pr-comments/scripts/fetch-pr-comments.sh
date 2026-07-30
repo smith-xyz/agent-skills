@@ -56,17 +56,38 @@ if ! command -v jq &>/dev/null; then
   exit 1
 fi
 
-PR_JSON=$(gh pr view --json number,url,title,headRefName 2>/dev/null) || {
-  echo "Error: no PR found for current branch" >&2
+LOCAL_BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "")
+ORIGIN_INFO=$(gh repo view --json nameWithOwner,owner,parent 2>/dev/null || echo "{}")
+ORIGIN_REPO=$(echo "$ORIGIN_INFO" | jq -r '.nameWithOwner // empty')
+ORIGIN_OWNER=$(echo "$ORIGIN_INFO" | jq -r '.owner.login // empty')
+PARENT_REPO=$(echo "$ORIGIN_INFO" | jq -r 'if .parent then (.parent.owner.login + "/" + .parent.name) else empty end')
+
+# Same-repo PR (non-fork, or PR opened within the fork itself)
+PR_JSON=$(gh pr view --json number,url,title,headRefName 2>/dev/null) || PR_JSON=""
+
+if [[ -n "$PR_JSON" ]]; then
+  REPO="$ORIGIN_REPO"
+else
+  # Fork workflow: PR lives in the upstream parent, headed by owner:branch
+  if [[ -n "$PARENT_REPO" && -n "$LOCAL_BRANCH" ]]; then
+    PR_JSON=$(gh pr list --repo "$PARENT_REPO" --head "$LOCAL_BRANCH" --state all \
+      --json number,url,title,headRefName,headRepositoryOwner \
+      --jq "[.[] | select(.headRepositoryOwner.login == \"${ORIGIN_OWNER}\")][0]" 2>/dev/null || echo "")
+    if [[ -n "$PR_JSON" && "$PR_JSON" != "null" ]]; then
+      REPO="$PARENT_REPO"
+    fi
+  fi
+fi
+
+if [[ -z "$PR_JSON" || "$PR_JSON" == "null" ]]; then
+  echo "Error: no PR found for current branch (checked $ORIGIN_REPO${PARENT_REPO:+ and upstream $PARENT_REPO})" >&2
   exit 1
-}
+fi
 
 PR_NUM=$(echo "$PR_JSON" | jq -r '.number')
 PR_URL=$(echo "$PR_JSON" | jq -r '.url')
 PR_TITLE=$(echo "$PR_JSON" | jq -r '.title')
 BRANCH=$(echo "$PR_JSON" | jq -r '.headRefName')
-
-REPO=$(gh repo view --json nameWithOwner -q '.nameWithOwner')
 
 REVIEW_COMMENTS=$(gh api "repos/$REPO/pulls/$PR_NUM/comments" --paginate 2>/dev/null || echo "[]")
 ISSUE_COMMENTS=$(gh api "repos/$REPO/issues/$PR_NUM/comments" --paginate 2>/dev/null || echo "[]")

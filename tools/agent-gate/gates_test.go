@@ -47,6 +47,7 @@ func TestMutatingToolsAreDetectedAcrossVendors(t *testing.T) {
 	}{
 		{"claude write", `{"tool_name":"Write","tool_input":{"file_path":"/a.go"}}`},
 		{"claude edit", `{"tool_name":"Edit","tool_input":{"file_path":"/a.go"}}`},
+		{"opencode apply_patch", `{"tool_name":"apply_patch","tool_input":{"patchText":"*** Update File: src/a.ts\n@@\n-a\n+b\n"}}`},
 		{"vscode editFiles", `{"toolName":"editFiles","toolInput":{"filePath":"/a.go"}}`},
 		{"vscode applyPatch", `{"tool_name":"applyPatch","tool_input":{"path":"/a.go"}}`},
 		{"cursor searchReplace", `{"tool_name":"searchReplace","tool_input":{"path":"/a.go"}}`},
@@ -75,6 +76,10 @@ func TestPayloadNormalizationAcrossVendorSpellings(t *testing.T) {
 	}
 	if claude.TargetPath != "/a.go" || vscode.TargetPath != "/a.go" {
 		t.Errorf("target path not extracted: claude=%q vscode=%q", claude.TargetPath, vscode.TargetPath)
+	}
+	op := payloadFor(t, `{"tool_name":"apply_patch","tool_input":{"patchText":"*** Add File: pkg/new.go\n@@\n+package pkg\n"}}`)
+	if op.TargetPath != "pkg/new.go" {
+		t.Errorf("opencode apply_patch path not extracted, got %q", op.TargetPath)
 	}
 	if cursor.Event != EvUserPrompt {
 		t.Errorf("cursor beforeSubmitPrompt should map to UserPromptSubmit, got %v", cursor.Event)

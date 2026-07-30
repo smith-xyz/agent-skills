@@ -329,7 +329,8 @@ func sessionID(args []string) string {
 	}
 	// Vendors expose the session id to child processes under various names.
 	for _, env := range []string{
-		"CLAUDE_SESSION_ID", "COPILOT_SESSION_ID", "CURSOR_SESSION_ID", "AGENT_SESSION_ID",
+		"CLAUDE_SESSION_ID", "COPILOT_SESSION_ID", "CURSOR_SESSION_ID",
+		"OPENCODE_SESSION_ID", "AGENT_SESSION_ID",
 	} {
 		if v := os.Getenv(env); v != "" {
 			return v
@@ -557,6 +558,23 @@ func cmdDoctor() {
 			problems++
 		}
 	}
+
+	// OpenCode uses a plugin instead of hooks JSON.
+	ocPlugin := filepath.Join(home, ".config", "opencode", "plugins", "agent-gate.ts")
+	ocPluginAlt := filepath.Join(home, ".config", "opencode", "plugins", "agent-gate.js")
+	fmt.Println("\n  plugin wiring:")
+	switch {
+	case fileExists(ocPlugin) || fileExists(ocPluginAlt):
+		path := ocPlugin
+		if !fileExists(ocPlugin) {
+			path = ocPluginAlt
+		}
+		fmt.Printf("    OK    %-14s %s\n", "opencode", path)
+		wired++
+	default:
+		fmt.Printf("    --    %-14s not present (%s)\n", "opencode", ocPlugin)
+	}
+
 	if wired == 0 {
 		fmt.Println("    FAIL  no vendor has live gate wiring — run: make install-gates")
 		problems++
@@ -583,4 +601,9 @@ func cmdDoctor() {
 		os.Exit(1)
 	}
 	fmt.Println("All checks passed.")
+}
+
+func fileExists(path string) bool {
+	_, err := os.Stat(path)
+	return err == nil
 }

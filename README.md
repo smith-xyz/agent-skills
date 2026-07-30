@@ -2,7 +2,7 @@
 
 A gated agent workflow. One canonical set of skills, agents, and rules, plus a
 binary that enforces how they get used — across Claude Code, VS Code Copilot,
-and Cursor.
+Cursor, and OpenCode.
 
 <https://github.com/smith-xyz/agent-skills>
 
@@ -31,14 +31,19 @@ Each vendor reads its own home, so `shared/` is rendered into each one:
 | VS Code Copilot | `~/.copilot/` | `instructions/*.instructions.md` |
 | Cursor | `~/.cursor/` | `rules/*.mdc` |
 | Codex | `~/.codex/` | `AGENTS.md` |
+| OpenCode | `~/.config/opencode/` | `AGENTS.md` |
 
 VS Code also reads `~/.claude/` for hooks and CLAUDE.md, which is why the gates
-only have to be wired once. Everything else is vendor-specific: agents need the
-`.agent.md` suffix, and rules become one instruction file per rule so each keeps
-its own `applyTo` scope instead of loading on every request.
+only have to be wired once for Claude/VS Code/Cursor. OpenCode has no hooks
+JSON — `make install-gates` installs a plugin at
+`~/.config/opencode/plugins/agent-gate.ts` that shells out to the same binary.
+Everything else is vendor-specific: agents need the `.agent.md` suffix, and
+rules become one instruction file per rule so each keeps its own `applyTo`
+scope instead of loading on every request.
 
-`agent-gate` is a dependency-free Go binary wired to lifecycle hooks. It
-normalizes each vendor's payload format and makes the same decision everywhere.
+`agent-gate` is a dependency-free Go binary wired to lifecycle hooks (or an
+OpenCode plugin). It normalizes each vendor's payload format and makes the
+same decision everywhere.
 
 | Gate | Event | What it does |
 | ------ | ------- | -------------- |
@@ -93,13 +98,14 @@ git clone git@github.com:smith-xyz/agent-skills.git
 cd agent-skills
 make install-deps      # once: brew install gh jq
 make install-vscode    # skills, agents, rules → ~/.copilot/, MCP → user profile
-make install-gates     # builds agent-gate, wires hooks for every vendor
+make install-opencode  # skills, agents, rules, permissions → ~/.config/opencode/
+make install-gates     # builds agent-gate; wires hooks + OpenCode plugin
 make gate-doctor       # verify the wiring is live
 ```
 
 Run the installer for each vendor you actually use — `install-vscode`,
-`install-claude`, `install-cursor`, `install-codex`. They are independent and
-all read the same `shared/` tree.
+`install-claude`, `install-cursor`, `install-codex`, `install-opencode`. They
+are independent and all read the same `shared/` tree.
 
 Settings are the one thing not installed automatically. User `settings.json` is
 JSONC and often a symlink into a dotfiles repo, so merging it programmatically
@@ -108,6 +114,10 @@ either fails to parse or clobbers tracked files. Copy the keys from
 
 **Codex has no hook support.** It gets the skills and rules but none of the
 gates. Treat it as ungated.
+
+**OpenCode** is gated via plugin (not ungated). Permissions default to
+allow-by-default for inspection, with ask/deny rails for destructive shell;
+agent-gate still enforces route/complexity/containment on edits.
 
 Uninstall with `make remove-gates` (leaves the binary and your ledger) or
 `make remove-vscode`.
@@ -197,6 +207,7 @@ See `shared/rules/agent-artifacts.mdc`.
 | Codex | `config.toml` | Model, sandbox mode |
 | Codex | `rules/default.rules` | Starlark execpolicy |
 | VS Code | `settings.json` | Terminal auto-approve, sandbox, permission level |
+| OpenCode | `opencode.json` | `permission` (bash/read/edit/external_directory) + formatter |
 
 After install, set `GITHUB_PERSONAL_ACCESS_TOKEN` and any other MCP credentials
 you use.

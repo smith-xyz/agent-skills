@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
-# Build agent-gate and wire it into every vendor that supports hooks.
+# Build agent-gate and wire it into every vendor that supports enforcement.
 #
 # Claude Code, VS Code Copilot and Cursor all read ~/.claude/settings.json,
 # so that file is the primary wiring. VS Code also gets a native hook file so
 # the gates survive if the Claude compatibility path is ever disabled.
+# OpenCode has no hooks JSON — it gets a plugin under ~/.config/opencode/plugins/.
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -11,6 +12,8 @@ GATE_SRC="$REPO_ROOT/tools/agent-gate"
 GATE_HOME="${AGENT_GATE_HOME:-$HOME/.agent-skills}"
 BIN_DIR="$GATE_HOME/bin"
 BIN="$BIN_DIR/agent-gate"
+OC_PLUGIN_SRC="$REPO_ROOT/vendors/opencode/plugins/agent-gate.ts"
+OC_PLUGIN_DEST="$HOME/.config/opencode/plugins/agent-gate.ts"
 
 ACTION="${1:-install}"
 
@@ -99,6 +102,13 @@ EOF
   fi
 }
 
+wire_opencode() {
+  [ -f "$OC_PLUGIN_SRC" ] || die "missing OpenCode plugin source: $OC_PLUGIN_SRC"
+  mkdir -p "$(dirname "$OC_PLUGIN_DEST")"
+  cp "$OC_PLUGIN_SRC" "$OC_PLUGIN_DEST"
+  echo "  plugin → $OC_PLUGIN_DEST"
+}
+
 unwire() {
   local settings="$HOME/.claude/settings.json"
   if [ -f "$settings" ]; then
@@ -116,6 +126,9 @@ unwire() {
       "$HOME/.cursor/hooks.json" > "$tmp" && mv "$tmp" "$HOME/.cursor/hooks.json"
     echo "  removed Cursor gate hooks"
   fi
+  if [ -f "$OC_PLUGIN_DEST" ]; then
+    rm -f "$OC_PLUGIN_DEST" && echo "  removed OpenCode plugin"
+  fi
   echo ""
   echo "Gates are off. The binary and your ledger remain at $GATE_HOME."
 }
@@ -128,6 +141,7 @@ case "$ACTION" in
     wire_claude
     wire_vscode
     wire_cursor
+    wire_opencode
     echo ""
     "$BIN" doctor || true
     ;;
