@@ -5,7 +5,7 @@ set -euo pipefail
 
 usage() {
   cat <<EOF
-Usage: $(basename "$0") --vendor <cursor|agents|claude|codex|opencode> --source <file.md> --dest <path>
+Usage: $(basename "$0") --vendor <cursor|agents|claude|codex|opencode|vscode|pi> --source <file.md> --dest <path>
 
 Source frontmatter: name, description, model_tier, readonly (optional).
 Body becomes prompt / developer_instructions.
@@ -31,8 +31,8 @@ done
 [[ -f "$source" ]] || { echo "Error: source not found: $source" >&2; exit 1; }
 
 case "$vendor" in
-  cursor|agents|claude|codex|opencode|vscode) ;;
-  *) echo "Error: vendor must be cursor, agents, claude, codex, opencode, or vscode" >&2; exit 1 ;;
+  cursor|agents|claude|codex|opencode|vscode|pi) ;;
+  *) echo "Error: vendor must be cursor, agents, claude, codex, opencode, vscode, or pi" >&2; exit 1 ;;
 esac
 
 extract_frontmatter() {
@@ -83,6 +83,13 @@ model_for_tier() {
     # the agent, so tier is dropped and the model picker default applies.
     # Override per agent by adding `model:` to the rendered file.
     vscode:*) echo "" ;;
+
+    # Pi resolves models as provider/model-id from the active registry, which
+    # is user- and machine-specific (ollama, anthropic, openai, etc). Pinning a
+    # provider model here would break on machines that don't have it. Emitting
+    # nothing lets the agent inherit the current Pi default model (or a
+    # subagents.agentOverrides.<name>.model / subagents.defaultModel setting).
+    pi:*) echo "" ;;
   esac
 }
 
@@ -135,6 +142,11 @@ render_markdown() {
         # verify-style agents can still run tests.
         if [[ "$vendor" == "vscode" ]]; then
           echo "tools: [read, search, execute, web, todo]"
+        elif [[ "$vendor" == "pi" ]]; then
+          # Pi also has no `readonly` field — a read-only agent is one whose
+          # `tools` allowlist omits `edit`/`write`. `bash` stays so verify-style
+          # agents can run tests; read/grep/find/ls/web cover recon + research.
+          echo "tools: read, grep, find, ls, bash, web"
         else
           echo "readonly: true"
         fi

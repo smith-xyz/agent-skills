@@ -14,7 +14,7 @@ STALE_SKILLS=(
   project-scaffold prose-refine fact-check multi-review
   adversarial-review reproduce-issue find-issues jira
   credentials gh-project-workflow pqc-readiness brainstorm
-  qodo-review artifact-ingest triage
+  qodo-review artifact-ingest triage morning-briefing
 )
 
 vendor_home() {
@@ -28,6 +28,9 @@ vendor_home() {
     vscode)   echo "$HOME/.copilot" ;;
     # OpenCode uses XDG-style config at ~/.config/opencode.
     opencode) echo "$HOME/.config/opencode" ;;
+    # Pi's user home is ~/.pi/agent (skills, agents, AGENTS.md, settings all
+    # live under the agent/ subdir, not ~/.pi directly).
+    pi)       echo "$HOME/.pi/agent" ;;
     *)        echo "$HOME/.$1" ;;
   esac
 }
@@ -105,6 +108,8 @@ agent_basename() {
   case "$vendor" in
     codex)  echo "${base%.md}.toml" ;;
     vscode) echo "${base%.md}.agent.md" ;;
+    # Pi agents are plain <name>.md markdown files.
+    pi)     echo "$base" ;;
     *)      echo "$base" ;;
   esac
 }
@@ -159,6 +164,7 @@ rules_target() {
     codex)    echo "$(vendor_home codex)/AGENTS.md" ;;
     opencode) echo "$(vendor_home opencode)/AGENTS.md" ;;
     vscode)   echo "$(vendor_home vscode)/instructions" ;;
+    pi)       echo "$(vendor_home pi)/AGENTS.md" ;;
     *)        echo "" ;;
   esac
 }
@@ -241,19 +247,40 @@ remove_hooks() {
   done
 }
 
-# --- Scheduling (OS-level, cross-vendor; always global) ---
+# --- Extensions (pi-specific: TypeScript extensions replacing shell hooks) ---
 
-install_scheduling() {
-  if [ -n "$INSTALL_HOME" ]; then
-    echo "  scheduling: skipped (workspace target)"
-    return
-  fi
-  local target="$HOME/.agent-skills/scheduling"
-  [ -d "$SHARED/scheduling" ] || return
+install_extensions() {
+  local vendor=$1
+  local src_dir="$REPO_ROOT/vendors/$vendor/extensions"
+  local target
+  target="$(vendor_home "$vendor")/extensions"
+  [ -d "$src_dir" ] || return
   mkdir -p "$target"
-  cp -r "$SHARED/scheduling/"* "$target/" 2>/dev/null || true
-  chmod +x "$target/install-schedules.sh" 2>/dev/null || true
-  echo "  scheduling → $target"
+  for f in "$src_dir/"*.ts; do
+    [ -e "$f" ] || continue
+    local base
+    base=$(basename "$f")
+    if [ "$INSTALL_MODE" = "link" ] && [ -e "$target/$base" ] && [ ! -L "$target/$base" ]; then
+      echo "  SKIP native: $base"
+      continue
+    fi
+    _install_item "$f" "$target/$base"
+  done
+  echo "  extensions → $target ($INSTALL_MODE)"
+}
+
+remove_extensions() {
+  local vendor=$1
+  local src_dir="$REPO_ROOT/vendors/$vendor/extensions"
+  local target
+  target="$(vendor_home "$vendor")/extensions"
+  for src in "$src_dir/"*.ts; do
+    [ -e "$src" ] || continue
+    local f="$target/$(basename "$src")"
+    if [ -L "$f" ] || [ -f "$f" ]; then
+      rm -f "$f" && echo "  removed extension: $(basename "$src")"
+    fi
+  done
 }
 
 # --- Stale cleanup ---
@@ -271,7 +298,7 @@ cleanup_stale() {
   # Also remove broken symlinks in skills/agents/rules
   local home
   home=$(vendor_home "$vendor")
-  for dir in skills agents rules hooks; do
+  for dir in skills agents rules hooks extensions; do
     [ -d "$home/$dir" ] || continue
     find "$home/$dir" -maxdepth 1 -type l ! -exec test -e {} \; -print -delete 2>/dev/null | while read -r broken; do
       echo "  cleaned broken link: $(basename "$broken")"
@@ -287,7 +314,7 @@ show_installed() {
   home=$(vendor_home "$vendor")
   echo ""
   echo "[$vendor] home=$home mode=$INSTALL_MODE"
-  for dir in skills agents hooks lib; do
+  for dir in skills agents hooks extensions lib; do
     local count=0
     [ -d "$home/$dir" ] && count=$(ls -1 "$home/$dir" | wc -l | tr -d ' ')
     echo "  $dir: $count items"

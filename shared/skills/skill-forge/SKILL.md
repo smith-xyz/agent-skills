@@ -2,45 +2,39 @@
 name: skill-forge
 description: >-
   Scaffold a new skill or subagent to the R1-R7 rubric when no existing skill
-  covers the work. Use when the route gate finds no match, when asked to create
-  or add a skill, or when a repeated manual routine should become a skill.
+  covers the work. Use when asked to create or add a skill, when reflect
+  proposes a new skill, or when a repeated manual routine should become a skill.
 ---
 
 # Skill Forge
 
-The route gate is a hard stop: no matching skill means no writes. This skill is
-the way out of that stop, so it must be fast — a scaffolded skill in one pass,
-not a design exercise.
+Scaffold a skill in one pass when a repeatable routine has no catalog match.
+Do not forge one-offs — that is how catalogs rot.
 
 ## When to forge vs. when not to
 
 | Situation | Action |
 | ----------- | -------- |
-| Route gate found no match, work is a repeatable routine | **Forge** |
-| Nearest match is close but too narrow | **Widen the existing skill** instead |
-| Work is genuinely one-off | Don't forge — use `agent-gate override` |
-| Routine is repo-specific, global skill exists | Write `.agent/profiles/<skill>.md` |
-
-Forging a skill for one-off work is how catalogs rot. The test is: *will I do
-this again?* If no, override and move on.
+| Work is a repeatable routine with no match | **Forge** |
+| Nearest match is close but too narrow | **Widen the existing skill** |
+| Work is genuinely one-off | Don't forge — just do the work |
+| Routine is repo-specific, global skill exists | Write `~/agent-workspace/<domain>/<repo>/profiles/<skill>.md` |
+| `reflect` proposed a draft | Review the draft; forge or amend from it |
 
 ## Procedure
 
 1. **Check for an overlap first.**
 
    ```bash
-   agent-gate catalog | grep -i '<keyword>'
+   reflect catalog | grep -i '<keyword>'
    ```
 
-   If anything comes close, widening it beats adding a sibling — R7 conflicts
-   are more expensive than a slightly broader skill.
+   Widening beats adding a sibling — R7 conflicts are expensive.
 
 2. **Name it** as `<verb>-<noun>` or `<noun>-<verb>`: `code-review`,
-   `notes-synthesize`, `ghsa-triage`. The name is a routing key; make it the
-   words you would actually type.
+   `notes-synthesize`, `ghsa-triage`.
 
-3. **Write the description before the body.** It carries the entire routing
-   decision and must answer *when do I invoke this*:
+3. **Write the description before the body** — it must answer *when*:
 
    ```yaml
    description: >-
@@ -48,29 +42,23 @@ this again?* If no, override and move on.
      phrase>, or <trigger phrase>.
    ```
 
-   Trigger phrases are the user's words, not internal jargon.
-
 4. **Scaffold to the rubric** using
-   [references/skill-template.md](references/skill-template.md). Every section
-   in that template maps to a rubric criterion — none are optional.
+   [references/skill-template.md](references/skill-template.md).
 
-5. **Write the stop condition first, steps second.** A routine without an
-   explicit end is a prompt, and prompts drift. The `## Done when` section is
-   the part that makes a skill repeatable.
+5. **Write the stop condition first, steps second.** `## Done when` makes it
+   repeatable.
 
-6. **Keep `SKILL.md` at or under 120 lines.** Anything longer — templates,
-   worked examples, deep technique — goes in `references/`.
+6. **Keep `SKILL.md` at or under 120 lines.** Detail goes in `references/`.
 
 7. **Verify** before reporting:
 
    ```bash
-   agent-gate catalog | grep '<name>'   # discoverable
+   reflect catalog | grep '<name>'
    ```
 
    Then self-check R1–R7 as `skill-audit` would.
 
-8. **Report** the path and the trigger phrases, then stop. Forging a skill is
-   not permission to run it — the user routes into it deliberately.
+8. **Report** the path and trigger phrases, then stop.
 
 ## Rubric reminders
 
@@ -86,13 +74,11 @@ this again?* If no, override and move on.
 
 ## Subagents instead of skills
 
-Forge a **subagent** when the work needs its own context window — long
-research, wide codebase sweeps, anything that would flood the main
-conversation. Subagents live in `agents/` and take a role prompt rather than a
-routine. Everything else is a skill.
+Forge a **subagent** when the work needs its own context window. Subagents live
+in `agents/`. Everything else is a skill.
 
 ## Done when
 
-The new `SKILL.md` exists, is discoverable via `agent-gate catalog`, passes a
+The new `SKILL.md` exists, is discoverable via `reflect catalog`, passes a
 self-check against all seven criteria, and its description does not collide
 with an existing skill's trigger.

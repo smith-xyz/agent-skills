@@ -1,3 +1,0 @@
-# Morning briefing — weekdays at 07:00
-# Install: crontab -l | cat - morning-briefing.crontab | crontab -
-0 7 * * 1-5 /bin/bash __SKILL_PATH__/scripts/morning-briefing.sh >> __LOG_DIR__/cron.log 2>&1

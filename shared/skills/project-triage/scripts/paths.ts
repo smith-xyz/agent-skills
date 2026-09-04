@@ -6,7 +6,7 @@ export function triageDir(): string {
   const dir = process.env.TRIAGE_DIR;
   if (!dir) {
     throw new Error(
-      "TRIAGE_DIR is required (e.g. $WORKSPACE/.triage/<domain>/<repo>)"
+      "TRIAGE_DIR is required (e.g. $HOME/agent-workspace/<domain>/<repo>/triage)"
     );
   }
   return resolve(dir);

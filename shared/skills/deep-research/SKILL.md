@@ -14,15 +14,16 @@ research memo, updated after each round. Runs until convergence or interrupt.
 
 ## Parameters
 
-| Param        | Default                                  | Meaning                                |
-| ------------ | ---------------------------------------- | -------------------------------------- |
-| `topic`      | required                                 | What to research                       |
-| `max_rounds` | 3                                        | Hard ceiling before forced convergence |
-| `output`     | `.agent/research/<slug>-<YYYY-MM-DD>.md` | Memo path, repo-relative               |
+| Param        | Default                                                                  | Meaning                   |
+| ------------ | ------------------------------------------------------------------------ | ------------------------- |
+| `topic`      | required                                                                 | What to research          |
+| `max_rounds` | 3                                                                        | Hard ceiling before forced convergence |
+| `output`     | `~/agent-workspace/<domain>/<repo>/research/<slug>-<YYYY-MM-DD>.md`      | Memo path under home      |
 
-The output lives under `.agent/` so it stays out of the repo's tracked tree.
-If the repo defines `.agent/profiles/deep-research.md`, read it first — it may
-override the output path or pin preferred sources.
+The output lives under `~/agent-workspace/` so it stays out of the repo's
+tracked tree. If
+`~/agent-workspace/<domain>/<repo>/profiles/deep-research.md` exists, read it
+first — it may override the output path or pin preferred sources.
 
 ## Procedure
 

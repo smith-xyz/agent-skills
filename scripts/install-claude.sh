@@ -38,7 +38,6 @@ case "$ACTION" in
     install_agents "$VENDOR"
     install_rules "$VENDOR"
     install_hooks "$VENDOR"
-    install_scheduling
     install_claude_globals
 
     cleanup_stale "$VENDOR"

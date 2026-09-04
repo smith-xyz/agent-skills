@@ -12,10 +12,10 @@ description: >-
 
 Readonly triage pipeline. Deterministic scripts fetch/score/render; subagents judge.
 
-Artifacts live in the **opened workspace**, never in project source trees:
+Artifacts live under `~/agent-workspace/`, never in project source trees:
 
 ```text
-.triage/<domain>/<repo>/
+~/agent-workspace/<domain>/<repo>/triage/
   triage.db
   issues.md  prs.md  backlog.md
   configs/   # triage.config.yaml, dispatch templates, layout.md, schemas
@@ -23,11 +23,12 @@ Artifacts live in the **opened workspace**, never in project source trees:
 
 ## Config
 
-Each project needs `.triage/<domain>/<repo>/configs/triage.config.yaml`:
+Each project needs
+`~/agent-workspace/<domain>/<repo>/triage/configs/triage.config.yaml`:
 
 ```yaml
 repo: owner/name
-domain: typeorm          # → .triage/<domain>/<repo>/
+domain: typeorm          # → ~/agent-workspace/<domain>/<repo>/triage/
 runtime: bun
 agents:
   - issue-triage
@@ -39,9 +40,8 @@ Env vars (set before scripts, or skill sets them from config):
 
 | Var | Purpose | Example |
 | ----- | --------- | --------- |
-| `TRIAGE_DIR` | Artifact root | `$WORKSPACE/.triage/typeorm/typeorm` |
+| `TRIAGE_DIR` | Artifact root | `$HOME/agent-workspace/typeorm/typeorm/triage` |
 | `TRIAGE_REPO` | GitHub `owner/repo` | `typeorm/typeorm` |
-| `WORKSPACE` | Opened workspace root | auto: `pwd` of mega-workspace |
 
 ## Execution Protocol
 
@@ -51,7 +51,7 @@ Run from workspace root with env vars set.
 ### 1. Init
 
 ```bash
-export TRIAGE_DIR="$PWD/.triage/<domain>/<repo>"
+export TRIAGE_DIR="$HOME/agent-workspace/<domain>/<repo>/triage"
 export TRIAGE_REPO="owner/name"
 bun <skill-dir>/scripts/init-db.ts
 ```
@@ -103,7 +103,7 @@ Relay render-reports stdout to user.
 Loop configs to triage everything:
 
 ```text
-for each .triage/*/configs/triage.config.yaml  (or .triage/*/*/configs/):
+for each ~/agent-workspace/*/*/triage/configs/triage.config.yaml:
   set TRIAGE_DIR + TRIAGE_REPO from config
   run protocol
 aggregate cross-project summary

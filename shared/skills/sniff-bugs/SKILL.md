@@ -27,7 +27,7 @@ If a project is named (or inferred from cwd), also load a project checklist when
 
 After the base pass, load an optional project-specific checklist:
 
-1. `<repo>/.agent/profiles/sniff-bugs.md` (preferred — ships with the repo)
+1. `~/agent-workspace/<domain>/<repo>/profiles/sniff-bugs.md` (preferred)
 2. `references/projects/<project>.md` under this skill (fallback)
 
 Project checklists add domain failure modes (contracts, worktree leaks, schema drift). They do not replace the base categories.

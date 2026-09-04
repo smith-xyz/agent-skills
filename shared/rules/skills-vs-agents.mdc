@@ -10,7 +10,7 @@ alwaysApply: true
 | **Skill** | Reusable *how-to* (procedure + constraints). Any agent or main chat can load it. | `notes-synthesize`, `excalidraw-diagram` |
 | **Subagent** | *Who* runs a job: role boundary, stop conditions, which skills to load. Thin — do not duplicate skill body. | `notes-synthesizer` |
 | **Orchestrator** | Dispatch / loop / resume across roles. Reads skills + state; fans out to subagents. | `caseboard-orchestrator` |
-| **Spec** | *What* to build or accept. Lives in `.backlog/` (or manifest refs) — **not** under `.cursor/skills/`. | phase task, hopper item |
+| **Spec** | *What* to build or accept. Lives in the user's backlog/tracker — **not** under installed skills. | phase task, hopper item |
 
 ## Decision test
 
@@ -21,22 +21,24 @@ alwaysApply: true
 
 Default: skill first. Add a subagent only when something will call it as a unit (isolation, background, or orchestrator dispatch).
 
-## Ownership model (three tiers)
+## Ownership
 
-- **Global `~/.cursor/`**: portable skills/agents/rules from agent-skills — no workspace path assumptions
-- **Workspace `.cursor/`**: mega-workspace conventions, domain orchestrators, domain-scoped rules
-- **Project `.cursor/`**: repo-shipped knowledge/QA — `discover-agents.sh` symlinks into workspace
-- Global skills write artifacts into the opened workspace (`.triage/`, `.notes/`, etc.), never into project source trees
+This catalog installs **globally** (`~/.cursor/`, `~/.claude/`, etc.). Skills
+and rules here must not assume a mega-workspace layout, repo-local `.cursor/`,
+or employer overlays — those are optional and owned by the user.
+
+Global skills write artifacts into `~/agent-workspace/<domain>/<repo>/`, never
+into project source trees.
 
 ## Guardrails
 
-- If it has acceptance criteria → **spec** (`.backlog/`)
+- If it has acceptance criteria → **spec** (user backlog / tracker — not a skill)
 - If it only applies to one project and describes what to build → **spec**
 - If an agent restates what a skill already says → trim the agent, reference the skill
 
 ## Anti-patterns
 
-- Feature specs parked as skills (e.g. 39 caseboard specs lived in `hpcase/.cursor/skills/` — moved to `.backlog/hpcase/specs/`)
+- Feature specs parked as skills
 - Agent markdown that restates an entire skill
 - Capability how-to buried only inside one agent with no skill
-- Personal agents stored in project `.cursor/` instead of workspace `.cursor/`
+- Catalog rules that assume a particular workspace or employer layout

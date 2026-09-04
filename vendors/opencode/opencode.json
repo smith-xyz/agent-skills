@@ -50,7 +50,7 @@
     "external_directory": {
       "~/.config/opencode/**": "allow",
       "~/.agent-skills/**": "allow",
-      "~/rh/**": "allow"
+      "~/agent-workspace/**": "allow"
     },
     "webfetch": "allow",
     "websearch": "allow",

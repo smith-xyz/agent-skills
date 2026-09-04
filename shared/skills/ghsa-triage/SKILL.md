@@ -4,23 +4,23 @@ description: >-
   Fetch GitHub Security Advisories for any repo into a flat tracking table,
   flag prelim quality/duplicate issues, then move selected rows through
   validate → adversarial → fix-review stages on request. Readonly — writes
-  only to <workspace>/.triage/<domain>/<repo>/ghsa/. Use when triaging GHSAs,
+  only to ~/agent-workspace/<domain>/<repo>/triage/ghsa/. Use when triaging GHSAs,
   validating a vulnerability report, or reviewing private advisory forks.
 ---
 
 # GHSA Triage
 
 Readonly advisory triage. Generic across GitHub repos. Separate from `project-triage`
-(issues/PRs) — shares `.triage/<domain>/<repo>/` conventions only.
+(issues/PRs) — shares `~/agent-workspace/<domain>/<repo>/triage/` conventions only.
 
 ## Parameters
 
 | Param | Source |
 | ------- | -------- |
-| `repo` | prompt, or `.triage/<domain>/<repo>/configs/triage.config.yaml`, or `git remote` |
-| `domain` | workspace layout or prompt |
+| `repo` | prompt, or `~/agent-workspace/<domain>/<repo>/triage/configs/triage.config.yaml`, or `git remote` |
+| `domain` | prompt, or git remote owner |
 | `repo_path` | local checkout (required for validate stage) |
-| `output_dir` | `$WORKSPACE/.triage/<domain>/<repo>/ghsa/` |
+| `output_dir` | `$HOME/agent-workspace/<domain>/<repo>/triage/ghsa/` |
 | `security_context` | prompt, or a workspace wrapper skill (e.g. `typeorm-ghsa-triage`); optional |
 
 The report template lives in [references/report-template.md](references/report-template.md);

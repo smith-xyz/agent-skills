@@ -6,8 +6,9 @@
 # Others:  strip frontmatter, concatenate into single file
 #
 # Usage: render-rules.sh <vendor> [--dest <path>]
-#   vendor: cursor | claude | codex | opencode | vscode
+#   vendor: cursor | claude | codex | opencode | vscode | pi
 #   --dest: output directory (cursor, vscode) or file path (others). Default: stdout.
+# Pi reads a single AGENTS.md, so it uses the concatenated-file branch.
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -16,7 +17,7 @@ RULES_DIR="$SCRIPT_DIR/../shared/rules"
 die() { echo "error: $*" >&2; exit 1; }
 [[ -d "$RULES_DIR" ]] || die "rules directory not found: $RULES_DIR"
 
-VENDOR="${1:?Usage: render-rules.sh <cursor|claude|codex|opencode|vscode>}"
+VENDOR="${1:?Usage: render-rules.sh <cursor|claude|codex|opencode|vscode|pi>}"
 shift
 
 DEST=""
@@ -61,7 +62,7 @@ case "$VENDOR" in
     fi
     ;;
 
-  claude|codex|opencode)
+  claude|codex|opencode|pi)
     body=""
     for f in "${RULE_FILES[@]}"; do
       body+="$(strip_frontmatter "$f")"$'\n'
@@ -113,6 +114,6 @@ $body"
     ;;
 
   *)
-    die "unknown vendor: $VENDOR (expected cursor|claude|codex|opencode|vscode)"
+    die "unknown vendor: $VENDOR (expected cursor|claude|codex|opencode|vscode|pi)"
     ;;
 esac

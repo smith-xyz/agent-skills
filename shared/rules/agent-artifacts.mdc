@@ -1,51 +1,63 @@
 ---
-description: "The .agent/ convention: where agent-produced artifacts live and how per-repo profiles bind global skills"
+description: "The agent-workspace convention: where agent-produced artifacts live under ~/agent-workspace and how per-repo profiles bind global skills"
 alwaysApply: true
 ---
 
-# The `.agent/` convention
+# The `agent-workspace` convention
 
-Every repo gets one agent-owned directory. Nothing an agent produces goes
-anywhere else without you asking for it.
+Agent scratch lives under a single visible home tree — never in a repo tree
+unless you ask for it.
 
+```text
+~/agent-workspace/
+  <domain>/<repo>/
+    research/     # research memos
+    notes/        # synthesized notes, _review/, _archive/, _synthesis/
+    plans/        # implementation plans
+    diagrams/     # Excalidraw + gen-*.py
+    profiles/     # per-repo bindings of global skills
+    triage/       # project-triage DBs and reports
+    hooks/        # optional verify-gate scripts
 ```
-.agent/
-  notes/       synthesized notes and their dated archive
-  research/    research memos
-  plans/       implementation plans
-  diagrams/    generated diagrams
-  profiles/    per-repo bindings of global skills
-```
 
-Add `.agent/` to `.gitignore`. It is scratch space and telemetry, not source.
+This is personal telemetry, not source. Do not add it to a repo's tree.
+Vendor install configs auto-allow read/write under this tree so agents are not
+prompted for every scratch file.
 
 ## Why this exists
 
-Agent output used to land wherever the agent felt like putting it — root-level
-markdown, ad-hoc folders, files you did not ask for. That sprawl is what makes
-a monorepo unnavigable. One directory, gitignored, ends it.
+Agent output used to land in repo roots or hidden dump folders — easy to lose
+and polluting the tree you live in. One home directory, organized by domain
+and repo, ends the sprawl.
 
-The containment gate enforces this: new markdown outside `.agent/`, `docs/`,
-or a pre-existing docs path is denied.
+## Domain / repo resolution
 
-## Writing outside `.agent/`
+Resolve `<domain>/<repo>` before writing:
+
+1. Git remote `owner/name` → `owner` / `name`
+2. Else, if the cwd path clearly encodes org/repo segments, use those
+3. Else `_unscoped/<cwd-basename>/`
+
+## Writing outside `~/agent-workspace/`
 
 Allowed without ceremony:
 
 - Editing files that already exist.
 - `README.md` and anything already under `docs/`.
+- Committed project config that must travel with source (e.g. repo-root
+  `verify.config.yaml` for CI).
 - Any path the user names explicitly.
 
-Everything else that is *new* markdown belongs in `.agent/`.
+Everything else that is *new* markdown, diagrams, or agent scratch belongs
+under `~/agent-workspace/<domain>/<repo>/`.
 
 ## Profiles: binding a global skill to one repo
 
-Global skills carry the routine. Profiles carry the parameters. This is how a
-skill stays portable (no workspace paths in its body) while still being
-concrete in the repo where it runs.
+Global skills carry the routine. Profiles carry the parameters.
 
-A profile lives at `.agent/profiles/<skill-name>.md` and is a defaults table,
-not a reimplementation:
+A profile lives at
+`~/agent-workspace/<domain>/<repo>/profiles/<skill-name>.md` and is a defaults
+table, not a reimplementation:
 
 ```markdown
 # ghsa-triage — acme/widget
@@ -59,17 +71,10 @@ not a reimplementation:
 ## Repo notes
 
 - The ORM layer wraps all queries; raw SQL only in `src/legacy/`.
-- Advisories against `src/legacy/` are automatically higher severity.
 ```
 
 Rules for profiles:
 
-- **Never restate the routine.** If a profile explains *how* to do the work,
-  the global skill is underspecified — fix the skill instead.
+- **Never restate the routine.** Fix the global skill instead.
 - **Parameters and repo-specific context only.**
-- A profile that grows past a screen is a signal the skill needs a real
-  parameter, not more prose.
-
-Skills read their profile first, before applying defaults. The session-start
-gate lists the profiles present in the current repo, so you can see which
-skills are already bound here.
+- A profile past a screen means the skill needs a real parameter.

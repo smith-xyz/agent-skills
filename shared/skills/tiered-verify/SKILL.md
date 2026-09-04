@@ -13,7 +13,9 @@ Generic verification skill. Domain scenarios live in project/workspace config â€
 
 ## Config
 
-Place `verify.config.yaml` at the repo root, or at `<repo>/.agent/verify.config.yaml`:
+Place `verify.config.yaml` at the repo root (preferred when CI or collaborators
+need it), or under `~/agent-workspace/<domain>/<repo>/verify.config.yaml` for
+a personal override. Prefer the repo-root file when both exist.
 
 ```yaml
 name: my-project
@@ -38,7 +40,8 @@ full_regression: scripts/verify-all-complete.sh
 
 ## Protocol
 
-1. Locate `verify.config.yaml` (prompt path, repo root, or `<repo>/.agent/`)
+1. Locate `verify.config.yaml` (prompt path, repo root, or
+   `~/agent-workspace/<domain>/<repo>/`)
 2. Run requested tiers (default: all) via their scripts from the config's base dir
 3. Categorize failures: unit | contract | integration | ux-journey | a11y | visual | deploy
 4. Report: exact error, repo, file, suggested fix

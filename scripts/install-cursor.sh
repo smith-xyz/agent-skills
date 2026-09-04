@@ -11,7 +11,7 @@ usage() {
 Usage: $0 [install|remove] [--target /path/to/.cursor]
 
   install              Install to ~/.cursor (copy mode)
-  install --target DIR Install to DIR (symlink mode; skips vendor JSON + scheduling)
+  install --target DIR Install to DIR (symlink mode; skips vendor JSON)
   remove [--target DIR] Remove installed assets
 EOF
 }
@@ -71,7 +71,6 @@ case "$ACTION" in
     install_rules "$VENDOR"
     install_hooks "$VENDOR"
     install_vendor_files
-    install_scheduling
     cleanup_stale "$VENDOR"
     show_installed "$VENDOR"
     ;;

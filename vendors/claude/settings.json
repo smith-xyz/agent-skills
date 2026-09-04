@@ -3,6 +3,9 @@
   "alwaysThinkingEnabled": false,
   "skipDangerousModePermissionPrompt": false,
   "permissions": {
+    "additionalDirectories": [
+      "~/agent-workspace"
+    ],
     "allow": [
       "Bash(go test *)",
       "Bash(go build *)",
@@ -39,7 +42,10 @@
       "Bash(python3 -m pytest *)",
       "Bash(python3 -m mypy *)",
       "Bash(git stash show *)",
-      "Bash(git worktree list *)"
+      "Bash(git worktree list *)",
+      "Read(~/agent-workspace/**)",
+      "Edit(~/agent-workspace/**)",
+      "Write(~/agent-workspace/**)"
     ],
     "deny": [
       "Bash(rm -rf *)",

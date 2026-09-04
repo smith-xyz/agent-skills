@@ -2,15 +2,25 @@
   "chat.permissions.default": "default",
   "chat.agent.sandbox.enabled": "on",
 
-  // The gates are only as strong as the scripts behind them, and the agent can
-  // reach these paths. Require manual approval before it edits its own gate.
+  // Allow agent scratch under ~/agent-workspace without prompts.
+  "chat.agent.sandbox.fileSystem.mac": {
+    "allowRead": ["~/agent-workspace"],
+    "allowWrite": ["~/agent-workspace"]
+  },
+  "chat.agent.sandbox.fileSystem.linux": {
+    "allowRead": ["~/agent-workspace"],
+    "allowWrite": ["~/agent-workspace"]
+  },
+
+  // Protect reflect config/hooks from silent agent edits.
   "chat.tools.edits.autoApprove": {
+    "**/agent-workspace/**": true,
     "**/.agent-skills/**": false,
     "**/.copilot/hooks/**": false,
     "**/.claude/settings.json": false,
     "**/.github/hooks/**": false,
     "**/shared/hooks/**": false,
-    "**/tools/agent-gate/**": false
+    "**/tools/reflect/**": false
   },
 
   "chat.tools.terminal.autoApprove": {

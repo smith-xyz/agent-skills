@@ -4,23 +4,20 @@ description: >-
   Audit the skill catalog against the R1-R7 rubric — triggerable, routine,
   repeatable, focused, verifiable, portable, distinct. Use when reviewing
   skills, checking skill quality, finding overlapping or stale skills, or
-  before turning on the route gate. Reports verdicts; fixes only on request.
+  before promoting reflect proposals into the catalog. Reports verdicts; fixes only on request.
 ---
 
 # Skill Audit
 
-The route gate sends every execution turn into a skill. A weak catalog turns
-that gate into a dead end, so this audit is load-bearing infrastructure, not
-housekeeping.
-
-Run it whenever the catalog grows, and before enabling the route gate.
+A weak catalog turns reflection proposals into noise. Run this whenever the
+catalog grows, and before accepting a batch of `reflect` drafts.
 
 ## Scope
 
 Audit every `SKILL.md` under the canonical catalog:
 
 ```bash
-agent-gate catalog --paths
+reflect catalog --paths
 ```
 
 Falls back to each vendor's skills directory plus this repo's `shared/skills/`.

@@ -1,25 +1,21 @@
 # agent-skills
 
-A gated agent workflow. One canonical set of skills, agents, and rules, plus a
-binary that enforces how they get used — across Claude Code, VS Code Copilot,
-Cursor, and OpenCode.
+One canonical set of skills, agents, and rules across Claude Code, VS Code
+Copilot, Cursor, Codex, OpenCode, and Pi — plus a Rust `reflect` engine that
+learns from sessions offline and proposes skill improvements for you to review.
 
 <https://github.com/smith-xyz/agent-skills>
 
 ## Why this exists
 
-Four problems, in the order they bite:
+1. **Skills didn't travel.** Each vendor had its own copy and they drifted.
+2. **AI absorbed the work.** Prompting became habit; sharpening skills atrophied.
+3. **Output sprawled.** Artifacts landed everywhere in a monorepo.
+4. **Nothing closed the loop.** Repeated asks never became better skills.
 
-1. **Skills didn't travel.** Each vendor had its own copy, they drifted, and
-   using them was sporadic and easy to forget.
-2. **Nothing forced work through them.** Skills were available, not required.
-3. **Prompting is habit-forming.** It is easy to keep asking for one more small
-   change and lose the ability to write it yourself.
-4. **Agent output sprawled.** Artifacts landed everywhere, which is unworkable
-   in a monorepo.
-
-The fix is structural, not aspirational: a single install target, and gates
-with real teeth.
+The fix: a single install target, soft rules that keep work coherent and
+budgets tight, and a **reflection engine** that proposes (never auto-merges)
+skill create/amend/delete after sessions.
 
 ## How it works
 
@@ -32,64 +28,33 @@ Each vendor reads its own home, so `shared/` is rendered into each one:
 | Cursor | `~/.cursor/` | `rules/*.mdc` |
 | Codex | `~/.codex/` | `AGENTS.md` |
 | OpenCode | `~/.config/opencode/` | `AGENTS.md` |
+| Pi | `~/.pi/agent/` | `AGENTS.md` |
 
-VS Code also reads `~/.claude/` for hooks and CLAUDE.md, which is why the gates
-only have to be wired once for Claude/VS Code/Cursor. OpenCode has no hooks
-JSON — `make install-gates` installs a plugin at
-`~/.config/opencode/plugins/agent-gate.ts` that shells out to the same binary.
-Everything else is vendor-specific: agents need the `.agent.md` suffix, and
-rules become one instruction file per rule so each keeps its own `applyTo`
-scope instead of loading on every request.
+Skills stay **opt-in recipes**, not passports. Soft rules cover work coherence,
+output/complexity budgets, and artifact layout. Domain-specific overlays (e.g.
+employer scope) live in your workspace/user rules, not in this repo. The
+`reflect` binary is wired to SessionStart/Stop hooks (Claude, Cursor, VS Code)
+and an OpenCode plugin (`session.created` / `session.idle` → same CLI).
 
-`agent-gate` is a dependency-free Go binary wired to lifecycle hooks (or an
-OpenCode plugin). It normalizes each vendor's payload format and makes the
-same decision everywhere.
-
-| Gate | Event | What it does |
-| ------ | ------- | -------------- |
-| Catalog | `SessionStart` | Injects the skill index and this repo's profiles, so you don't have to remember them |
-| Contract | `UserPromptSubmit` | States the routing rule: research is free, execution needs a claimed skill |
-| **Route** | `PreToolUse` | **Denies** any edit until a skill or subagent is claimed |
-| **Complexity** | `PreToolUse` | **Denies** small, high-judgement edits in your sharpen languages and hands them back to you |
-| **Containment** | `PreToolUse` | **Denies** new markdown outside `.agent/` |
-| Report | `Stop` | Records what happened for `agent-gate report` |
-
-Reading, searching, and running tests are never gated. The gates fire only on
-tools that modify the workspace.
-
-### The handoff card
-
-When the complexity gate fires, you get an actionable card rather than a wall:
+### Reflection engine
 
 ```text
-YOU WRITE THIS.
-
-  file:    internal/scheduler/queue.go
-  do:      impl-plan — add backpressure — bounded chan, drop-oldest
-  read:    skill go-patterns
-  verify:  go test ./internal/scheduler
-  why:     2-line change in a sharpen language (threshold 40)
+chat (quiet) → Stop hook → reflect (Rust) → SQLite ledger
+                         → digest → review queue → you accept → catalog
 ```
 
-Each file bounces at most once per session, so you are never trapped in a loop.
+| Command | What it does |
+| ------- | ------------ |
+| `reflect hook session-start` | Injects catalog + coherence reminder |
+| `reflect hook stop` | Appends a trace; optional followup if reviews pending |
+| `reflect digest` | Clusters recent traces into proposal drafts |
+| `reflect status` | `1 new · 1 amended · 0 deleted` |
+| `reflect accept\|reject <id>` | Sync draft into `shared/skills/` or drop |
+| `reflect install\|remove` | Wire/unwire vendor hooks |
 
-Genuinely need the agent? `agent-gate override --reason "..."`. It works
-immediately, and it shows up in every report — friction, not a wall.
+Fail open: a bad hook payload never blocks the session.
 
-### Seeing the ratio
-
-```bash
-make gate-report
-```
-
-```text
-REPO                     AI EDITS  BOUNCED OVERRIDE   AI LINES
-proj                            3        5        1          6
-
-Bounce rate: 5/8 (62%) of mutating calls came back to you.
-```
-
-If the bounce rate is zero, the thresholds are wrong.
+Config: `~/.agent-skills/reflect.json` (created on first `reflect install`).
 
 ## Installation
 
@@ -97,130 +62,58 @@ If the bounce rate is zero, the thresholds are wrong.
 git clone git@github.com:smith-xyz/agent-skills.git
 cd agent-skills
 make install-deps      # once: brew install gh jq
-make install-vscode    # skills, agents, rules → ~/.copilot/, MCP → user profile
-make install-opencode  # skills, agents, rules, permissions → ~/.config/opencode/
-make install-gates     # builds agent-gate; wires hooks + OpenCode plugin
-make gate-doctor       # verify the wiring is live
+make install-cursor    # skills, agents, rules → ~/.cursor/
+make install-claude
+make install-vscode
+make install-opencode
+make install-pi        # skills, agents, rules → ~/.pi/agent/
+make install-reflect   # builds reflect; wires Claude/Cursor/VS Code hooks
 ```
 
-Run the installer for each vendor you actually use — `install-vscode`,
-`install-claude`, `install-cursor`, `install-codex`, `install-opencode`. They
-are independent and all read the same `shared/` tree.
+Uninstall hooks with `make remove-reflect` (leaves the binary and ledger).
 
-Settings are the one thing not installed automatically. User `settings.json` is
-JSONC and often a symlink into a dotfiles repo, so merging it programmatically
-either fails to parse or clobbers tracked files. Copy the keys from
-`vendors/vscode/settings.json` by hand.
-
-**Codex has no hook support.** It gets the skills and rules but none of the
-gates. Treat it as ungated.
-
-**OpenCode** is gated via plugin (not ungated). Permissions default to
-allow-by-default for inspection, with ask/deny rails for destructive shell;
-agent-gate still enforces route/complexity/containment on edits.
-
-Uninstall with `make remove-gates` (leaves the binary and your ledger) or
-`make remove-vscode`.
-
-### Configuration
-
-`~/.agent-skills/gates.json`:
-
-```json
-{
-  "sharpen": ["go", "rust"],
-  "assist_only": ["yaml", "json", "md", "tf"],
-  "max_hand_lines": 40,
-  "repos": {
-    "scratch-repo": { "complexity_gate": false }
-  }
-}
-```
-
-`sharpen` languages bounce. `assist_only` never do. Per-repo overrides let
-throwaway and infra repos opt out without weakening the default.
-
-Repo identity resolves from the **target file's** path, not the working
-directory — so opening a monorepo root still attributes work to the right
-project.
+Settings are not merged automatically — copy keys from
+`vendors/vscode/settings.json` by hand if needed.
 
 ## Layout
 
 ```text
-shared/                  Canonical content — the single source of truth
+shared/                  Canonical content — single source of truth
   skills/<name>/           SKILL.md, plus scripts/ and references/
   agents/*.md              Subagent definitions
   rules/*.mdc              Global rules, rendered per vendor
   mcp/mcp.json             MCP server config
-  hooks/                   Portable hook scripts
-  scheduling/              launchd/cron for the morning briefing
+  hooks/                   Optional project hooks (verify, format)
 
-tools/agent-gate/        The gate engine (Go, no dependencies)
-vendors/<vendor>/        Vendor config only: permissions, settings, sandbox
+tools/reflect/           Reflection engine (Rust)
+vendors/<vendor>/        Vendor config only: permissions, settings
 scripts/                 Installers and renderers
 ```
 
-There is no intermediate render stage. Installers read `shared/` and write to
-the vendor target directly — the old committed per-vendor copies were the
-source of every drift bug this repo had.
-
 ## Skills
 
-The catalog is injected at session start, so it is not duplicated here. To
-list it:
-
 ```bash
-agent-gate catalog
+reflect catalog
 ```
 
-Skills follow a rubric — triggerable, a routine, repeatable, focused,
-verifiable, portable, distinct. Two skills maintain it:
+Skills follow a rubric — triggerable, routine, repeatable, focused,
+verifiable, portable, distinct. `skill-audit` and `skill-forge` maintain it.
 
-- **`skill-audit`** scores the catalog against the rubric.
-  `bash shared/skills/skill-audit/references/checks.sh` runs the mechanical
-  checks.
-- **`skill-forge`** scaffolds a new skill to the rubric, so the route gate
-  never dead-ends.
+## Artifact layout
 
-Run the audit after adding skills. A hard route into a weak catalog is worse
-than no gate at all.
+Agent scratch lives under `~/agent-workspace/<domain>/<repo>/` (research,
+notes, plans, diagrams, profiles, triage) — not in repos. See
+`shared/rules/agent-artifacts.mdc`.
 
-## The `.agent/` convention
-
-Agent output goes in `.agent/` — `notes/`, `research/`, `plans/`,
-`diagrams/`, `profiles/`. Gitignore it. The containment gate enforces it.
-
-Per-repo **profiles** at `.agent/profiles/<skill>.md` bind a global skill to
-one repo with a defaults table. Global skills carry the routine; profiles carry
-the parameters. This keeps skills free of workspace paths while still being
-concrete where they run.
-
-See `shared/rules/agent-artifacts.mdc`.
-
-## Permissions
-
-| Vendor | File | Controls |
-| -------- | ------ | ---------- |
-| Cursor | `permissions.json` | IDE terminal + MCP auto-run allowlists |
-| Cursor | `cli-config.json` | CLI allow/deny (`Shell`, `Read`, `Write`, `Mcp`) |
-| Claude | `settings.json` | Command permissions, model selection |
-| Codex | `config.toml` | Model, sandbox mode |
-| Codex | `rules/default.rules` | Starlark execpolicy |
-| VS Code | `settings.json` | Terminal auto-approve, sandbox, permission level |
-| OpenCode | `opencode.json` | `permission` (bash/read/edit/external_directory) + formatter |
-
-After install, set `GITHUB_PERSONAL_ACCESS_TOKEN` and any other MCP credentials
-you use.
+Vendor permissions auto-allow that tree (Cursor `cli-config`, Claude
+`additionalDirectories`, OpenCode `external_directory`, Codex
+`writable_roots`, VS Code sandbox `allowRead`/`allowWrite`). Re-run
+`make install-*` to pick up the allowlists.
 
 ## Design notes
 
-- **Gates fail open.** A malformed payload or a crashed engine allows the edit.
-  A bug in the gate must never brick an editing session — which is exactly why
-  `agent-gate doctor` exists, since a silently dead gate is worse than none.
-- **No runtime dependency.** The engine is a static Go binary. The previous
-  system died with `bun: not found`; a gate that stops protecting you when a
-  runtime goes missing is not a gate.
-- **The ledger is JSONL** at `~/.agent-skills/ledger/`, never inside a repo.
-  Greppable, and it keeps the binary dependency-free.
-- **VS Code ignores hook `matcher` values**, so hooks fire on every tool and all
-  matching happens inside the engine. VS Code hooks are Preview and may shift.
+- **Hooks fail open.** A crashed `reflect` must never brick editing.
+- **Static binary.** No runtime dependency for the hook path.
+- **Review before catalog write.** Proposals never auto-merge.
+- **Ledger stays on the machine** at `~/.agent-skills/`; accept syncs into
+  the configured `catalog_path` (this repo by default).

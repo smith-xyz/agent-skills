@@ -21,17 +21,18 @@ draw it instead.
 ## Layout
 
 ```text
-.agent/diagrams/<area>/
+~/agent-workspace/<domain>/<repo>/diagrams/<area>/
   <name>.excalidraw     # the required deliverable
   gen-<name>.py         # preferred for anything non-trivial
 ```
 
-`.agent/` is gitignored. If a diagram belongs in the tracked tree, the user
-says so explicitly — then mirror the repo's existing docs layout. Never drop
-diagrams at the root of a contributable repo.
+Scratch diagrams live under `~/agent-workspace/`, not in the repo. If a
+diagram belongs in the tracked tree, the user says so explicitly — then
+mirror the repo's existing docs layout. Never drop diagrams at the root of a
+contributable repo.
 
-If `.agent/profiles/excalidraw-diagram.md` exists, read it first for the
-repo's preferred output path and reference generators.
+If `~/agent-workspace/<domain>/<repo>/profiles/excalidraw-diagram.md` exists,
+read it first for the repo's preferred output path and reference generators.
 
 ## Procedure
 

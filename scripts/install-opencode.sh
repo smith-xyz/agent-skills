@@ -4,13 +4,12 @@
 # OpenCode reads personal customizations from ~/.config/opencode:
 #   skills  → ~/.config/opencode/skills/<name>/SKILL.md
 #   agents  → ~/.config/opencode/agents/<name>.md
-#   rules   → ~/.config/opencode/AGENTS.md  (concatenated, frontmatter stripped)
+#   rules   → ~/.config/opencode/AGENTS.md  (shared rules)
 #   config  → ~/.config/opencode/opencode.json  (permissions, MCP, model)
 #
-# OpenCode has no Claude-style hooks JSON; agent-gate is enforced by a plugin
-# installed via make install-gates → ~/.config/opencode/plugins/agent-gate.ts.
-# format-on-edit is replaced by "formatter": true in opencode.json.
-# Other shared hooks (notes-budget, post-turn-verify) stay AGENTS.md guidance.
+# OpenCode gets skills/agents/rules/permissions. Reflect wires a thin plugin
+# (vendors/opencode/plugins/reflect.ts) via `make install-reflect` that calls
+# the Rust binary on session.created / session.idle. formatter: true in config.
 set -euo pipefail
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/install-lib.sh"
 
@@ -59,25 +58,38 @@ install_opencode_globals() {
   fi
 }
 
+# Append OpenCode-only guidance after the shared AGENTS.md body when present.
+append_opencode_rules() {
+  local target
+  target="$(rules_target opencode)"
+  [ -f "$target" ] || return 0
+  local dir="$VENDORS/opencode/rules"
+  [ -d "$dir" ] || return 0
+  for f in "$dir"/*.md; do
+    [ -f "$f" ] || continue
+    {
+      echo ""
+      echo "<!-- from vendors/opencode/rules/$(basename "$f") -->"
+      cat "$f"
+    } >> "$target"
+  done
+}
+
 case "$ACTION" in
   install)
     echo "--- Installing to $VENDOR ---"
     install_skills "$VENDOR"
     install_agents "$VENDOR"
     install_rules "$VENDOR"
-    # OpenCode has no Claude-style hooks — gate teeth come from the plugin
-    # installed by make install-gates. format-on-edit → "formatter": true.
-    install_scheduling
+    append_opencode_rules
     install_opencode_globals
 
     cleanup_stale "$VENDOR"
     show_installed "$VENDOR"
 
     echo ""
-    echo "  Note: OpenCode gate enforcement is the plugin from make install-gates."
-    echo "  - agent-gate → ~/.config/opencode/plugins/agent-gate.ts"
+    echo "  Note: reflect OpenCode plugin is installed by make install-reflect."
     echo "  - format-on-edit → handled by \"formatter\": true in opencode.json"
-    echo "  - post-turn-verify / notes-budget → AGENTS.md guidance (or a future plugin)"
     ;;
   remove)
     echo "--- Removing from $VENDOR ---"
@@ -86,5 +98,6 @@ case "$ACTION" in
     remove_rules "$VENDOR"
     oc_home="$(vendor_home opencode)"
     [ -f "$oc_home/opencode.json" ] && rm -f "$oc_home/opencode.json" && echo "  removed config"
+    [ -f "$oc_home/plugins/reflect.ts" ] && rm -f "$oc_home/plugins/reflect.ts" && echo "  removed reflect plugin"
     ;;
 esac

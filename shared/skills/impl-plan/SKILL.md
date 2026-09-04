@@ -18,24 +18,26 @@ deliverable.** Execution is a separate step.
 | Param | Default | Meaning |
 | ------- | --------- | --------- |
 | `input` | required | Ticket key, or free-text work description |
-| `output` | `.agent/plans/<slug>.md` | Plan path, repo-relative |
+| `output` | `~/agent-workspace/<domain>/<repo>/plans/<slug>.md` | Plan path under home |
 
 Derive `slug` from the ticket key, lowercased, or from a kebab-cased title.
-If `.agent/profiles/impl-plan.md` exists, read it first — it carries the
-repo's tracker project, gates, and preferred agents.
+If `~/agent-workspace/<domain>/<repo>/profiles/impl-plan.md` exists, read it
+first — it carries the repo's tracker project, gates, and preferred agents.
 
 ## Procedure
 
 ### 1. Check for an existing plan
 
-Glob `.agent/plans/` for the slug. If a current plan exists, report it and
+Glob `~/agent-workspace/<domain>/<repo>/plans/` for the slug. If a current
+plan exists, report it and
 stop. Re-plan only on an explicit refresh request or a material change to the
 source item.
 
 ### 2. Gather context
 
 - **Ticket** — fetch description, acceptance criteria, comments, and labels.
-- **Prior research** — read any `.agent/research/` memo covering this work.
+- **Prior research** — read any `~/agent-workspace/<domain>/<repo>/research/`
+  memo covering this work.
   Acceptance criteria from the ticket outrank a memo's inferred scope.
 - **Codebase recon** — grep and glob for the files in scope, then read enough
   surrounding code to name concrete touch points. Vague areas are a planning

@@ -1,0 +1,29 @@
+---
+description: "Work coherence: mutating asks map to active user work; deep-research is exempt"
+alwaysApply: true
+---
+
+# Work coherence
+
+Before mutating the workspace, tie the ask to something the user is already
+trying to achieve:
+
+- An active tracked item (ticket, artifact envelope, backlog entry, plan)
+- A named project or domain they own in this workspace
+- An explicit goal they stated in the conversation
+
+If none is clear, ask **one** clarifying question before editing.
+
+Domain- or employer-specific framing (what “in scope” means for you) belongs
+in **your** workspace or user rules — not in this shared catalog.
+
+## Exempt
+
+`deep-research` (and pure research/reading turns) may explore without a work
+link. Everything else that changes files should stay on the coherent picture.
+
+## Skills
+
+Skills are opt-in recipes. Prefer a named skill when the ask matches a catalog
+trigger. Do not invent ceremony — if no skill fits, proceed under budgets or
+offer `skill-forge` only when the routine will repeat.

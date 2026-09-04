@@ -34,29 +34,33 @@ repo-specific.
 1. **Detect the stack** and pick a starting script from
    `references/examples/`: `go-gate.sh`, `rust-gate.sh`, `ts-gate.sh`, or
    `multi-repo-gate.sh` for a repo with several sub-projects.
-2. **Copy the hook scripts** into the project and make them executable:
+2. **Copy the hook scripts** into the agent-workspace tree and make them
+   executable (resolve `<domain>/<repo>` per `agent-artifacts`):
 
    ```bash
-   mkdir -p .agent/hooks
-   cp <skill-dir>/scripts/post-turn-verify.sh .agent/hooks/
-   cp <skill-dir>/scripts/format-on-edit.sh   .agent/hooks/
-   chmod +x .agent/hooks/*.sh
+   ROOT="$HOME/agent-workspace/<domain>/<repo>/hooks"
+   mkdir -p "$ROOT"
+   cp <skill-dir>/scripts/post-turn-verify.sh "$ROOT/"
+   cp <skill-dir>/scripts/format-on-edit.sh   "$ROOT/"
+   chmod +x "$ROOT"/*.sh
    ```
 
-3. **Register the hook.** Add to the project's hook config, keying off `Stop`:
+3. **Register the hook.** Add to the project's hook config, keying off `Stop`.
+   Use an absolute path so the hook works regardless of cwd:
 
    ```json
    {
      "hooks": {
        "Stop": [
          { "hooks": [ { "type": "command",
-                        "command": ".agent/hooks/post-turn-verify.sh" } ] }
+                        "command": "/Users/<you>/agent-workspace/<domain>/<repo>/hooks/post-turn-verify.sh" } ] }
        ]
      }
    }
    ```
 
-   Cursor's project-local format uses `"stop"` with a `loop_limit`. See
+   Prefer expanding `$HOME` when editing by hand. Cursor's project-local
+   format uses `"stop"` with a `loop_limit`. See
    [references/hooks-json.md](references/hooks-json.md) for the per-vendor
    shapes.
 

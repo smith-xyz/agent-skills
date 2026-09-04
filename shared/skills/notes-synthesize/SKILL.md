@@ -1,10 +1,11 @@
 ---
 name: notes-synthesize
 description: >-
-  Synthesize and lean the .agent/notes tree: classify notes, soft-archive fat,
-  promote system design into diagrams, and write a synthesis log. Use when
-  synthesizing notes, trimming note sprawl, triaging notes, or cleaning up
-  accumulated markdown. Logs backlog candidates but never writes them.
+  Synthesize and lean the ~/agent-workspace notes tree: classify notes,
+  soft-archive fat, promote system design into diagrams, and write a synthesis
+  log. Use when synthesizing notes, trimming note sprawl, triaging notes, or
+  cleaning up accumulated markdown. Logs backlog candidates but never writes
+  them.
 ---
 
 # Notes Synthesize
@@ -21,24 +22,24 @@ research something, use `deep-research` instead.
 
 ## Destinations
 
-All paths are relative to the repo root. `.agent/` is gitignored, so nothing
-here pollutes the tracked tree.
+All paths are under `~/agent-workspace/<domain>/<repo>/` (see
+`agent-artifacts` for domain/repo resolution).
 
 | Kind | Path |
 | ------ | ------ |
-| Live notes | `.agent/notes/<area>/` |
-| Unclassified | `.agent/notes/_review/` |
-| Soft-archive | `.agent/notes/_archive/<YYYY-MM-DD>/<original-relative-path>` |
-| Diagrams | `.agent/diagrams/<area>/`, via `excalidraw-diagram` |
-| Synthesis log | `.agent/notes/_synthesis/<YYYY-MM-DD>.md` |
+| Live notes | `~/agent-workspace/<domain>/<repo>/notes/<area>/` |
+| Unclassified | `~/agent-workspace/<domain>/<repo>/notes/_review/` |
+| Soft-archive | `~/agent-workspace/<domain>/<repo>/notes/_archive/<YYYY-MM-DD>/<original-relative-path>` |
+| Diagrams | `~/agent-workspace/<domain>/<repo>/diagrams/<area>/`, via `excalidraw-diagram` |
+| Synthesis log | `~/agent-workspace/<domain>/<repo>/notes/_synthesis/<YYYY-MM-DD>.md` |
 
 Archiving preserves the original path beneath the date folder:
 
-`.agent/notes/case-bot/design/foo.md`
-→ `.agent/notes/_archive/2026-07-10/case-bot/design/foo.md`
+`.../notes/case-bot/design/foo.md`
+→ `.../notes/_archive/2026-07-10/case-bot/design/foo.md`
 
-If the repo has `.agent/profiles/notes-synthesize.md`, read it first — it may
-remap these destinations.
+If `~/agent-workspace/<domain>/<repo>/profiles/notes-synthesize.md` exists,
+read it first — it may remap these destinations.
 
 ## Classification
 
@@ -76,7 +77,8 @@ diagram. Otherwise prefer a single verdict per file.
    3. Soft-archive by moving. Never hard-delete.
    4. For diagrammed design, reduce the live note to a pointer plus whatever
       is genuinely non-visual; archive the prose the diagram replaced.
-6. **Write the synthesis log** to `.agent/notes/_synthesis/<YYYY-MM-DD>.md`
+6. **Write the synthesis log** to
+   `~/agent-workspace/<domain>/<repo>/notes/_synthesis/<YYYY-MM-DD>.md`
    with sections: Scope, Actions table, Diagrams created or updated,
    Soft-archived, Backlog candidates, Still open.
 

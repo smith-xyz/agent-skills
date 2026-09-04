@@ -5,7 +5,7 @@
 #   skills  → ~/.copilot/skills/<name>/SKILL.md
 #   agents  → ~/.copilot/agents/*.agent.md
 #   rules   → ~/.copilot/instructions/*.instructions.md
-#   hooks   → ~/.copilot/hooks/*.json   (wired by install-gates.sh)
+#   hooks   → ~/.copilot/hooks/*.json   (wired by reflect install)
 #
 # MCP is not part of that tree — it lives in the VS Code user profile.
 set -euo pipefail
@@ -31,7 +31,6 @@ case "$ACTION" in
       "$REPO_ROOT/scripts/render-mcp.sh" vscode --dest "$CODE_USER/mcp.json"
     fi
 
-    install_scheduling
     cleanup_stale "$VENDOR"
     show_installed "$VENDOR"
 

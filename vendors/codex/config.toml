@@ -1,5 +1,8 @@
 model = "o3"
 sandbox_mode = "workspace-write"
 
+[sandbox_workspace_write]
+writable_roots = ["~/agent-workspace"]
+
 [features]
 hooks = true

@@ -1,26 +1,10 @@
-.PHONY: install-deps test \ install-cursor install-claude install-codex \
-		install-vscode install-opencode install-cursor-workspace install-gates \
-       	install-cursor-workspace install-gates remove-gates gate-report gate-doctor \
-       	remove-cursor remove-claude remove-codex remove-vscode remove-opencode
-
-test:
-	cd tools/agent-gate && go test ./...
+.PHONY: install-deps install-cursor install-claude install-codex \
+	install-vscode install-opencode install-pi install-reflect remove-reflect \
+	remove-cursor remove-claude remove-codex remove-vscode remove-opencode \
+	remove-pi reflect-test
 
 install-deps:
 	brew install gh jq openshift-cli
-
-# Gate engine — builds agent-gate and wires hooks into every vendor.
-install-gates:
-	./scripts/install-gates.sh install
-
-remove-gates:
-	./scripts/install-gates.sh remove
-
-gate-report:
-	@$${AGENT_GATE_HOME:-$$HOME/.agent-skills}/bin/agent-gate report
-
-gate-doctor:
-	@$${AGENT_GATE_HOME:-$$HOME/.agent-skills}/bin/agent-gate doctor
 
 install-cursor:
 	./scripts/install-cursor.sh install
@@ -37,6 +21,22 @@ install-vscode:
 install-opencode:
 	./scripts/install-opencode.sh install
 
+install-pi:
+	./scripts/install-pi.sh install
+
+install-reflect:
+	cd tools/reflect && CARGO_TARGET_DIR=target cargo build --release
+	mkdir -p "$${AGENT_SKILLS_HOME:-$$HOME/.agent-skills}/bin"
+	cp tools/reflect/target/release/reflect "$${AGENT_SKILLS_HOME:-$$HOME/.agent-skills}/bin/reflect"
+	"$${AGENT_SKILLS_HOME:-$$HOME/.agent-skills}/bin/reflect" install
+
+remove-reflect:
+	@bin="$${AGENT_SKILLS_HOME:-$$HOME/.agent-skills}/bin/reflect"; \
+	if [ -x "$$bin" ]; then "$$bin" remove; else echo "reflect binary not found"; fi
+
+reflect-test:
+	cd tools/reflect && CARGO_TARGET_DIR=target cargo test && CARGO_TARGET_DIR=target cargo clippy -- -D warnings
+
 remove-cursor:
 	./scripts/install-cursor.sh remove
 
@@ -51,3 +51,6 @@ remove-vscode:
 
 remove-opencode:
 	./scripts/install-opencode.sh remove
+
+remove-pi:
+	./scripts/install-pi.sh remove

@@ -20,10 +20,10 @@ non-obvious constraint or a failure mode worth naming, name it here.>
 | Param | Default | Meaning |
 |-------|---------|---------|
 | `input` | required | <what it is> |
-| `output` | `.agent/<area>/<slug>.md` | <where results land> |
+| `output` | `~/agent-workspace/<domain>/<repo>/<area>/<slug>.md` | <where results land> |
 
-If `.agent/profiles/<name>.md` exists, read it first for repo-specific
-defaults.
+If `~/agent-workspace/<domain>/<repo>/profiles/<name>.md` exists, read it
+first for repo-specific defaults.
 
 ## Procedure             # R2 + R3
 

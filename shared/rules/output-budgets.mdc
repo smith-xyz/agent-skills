@@ -1,0 +1,24 @@
+---
+description: "Output and complexity budgets: one deliverable, no sprawl, user keeps coding"
+alwaysApply: true
+---
+
+# Output and complexity budgets
+
+AI assists. It does not absorb all the work.
+
+## Output
+
+- One primary deliverable per turn (patch, diagram, short answer).
+- No unsolicited memos, reports, or extra markdown.
+- Prefer a diagram over long prose.
+- Put new scratch under `~/agent-workspace/<domain>/<repo>/`.
+
+## Complexity / sharpen
+
+- Prefer the smallest change that satisfies the ask.
+- Cap scope: fewer files and lines beat a drive-by refactor.
+- When a change is small and high-judgement in a language the user wants to
+  keep sharp (e.g. Go, Rust), describe the approach and let **them** write it
+  unless they explicitly ask the agent to edit.
+- Do not deny or block tools — this is guidance, not a gate.

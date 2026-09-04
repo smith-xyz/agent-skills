@@ -38,6 +38,8 @@
       "Shell(python3 -m mypy)",
       "Shell(git stash show)",
       "Shell(git worktree list)",
+      "Read(~/agent-workspace/**)",
+      "Write(~/agent-workspace/**)",
       "Mcp(github:*)",
       "Mcp(atlassian:*)",
       "Mcp(kubernetes:*)",

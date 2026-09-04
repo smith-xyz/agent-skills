@@ -12,7 +12,6 @@ case "$ACTION" in
     install_agents "$VENDOR"
     install_rules "$VENDOR"
     install_hooks "$VENDOR"
-    install_scheduling
 
     if is_workspace_target; then
       echo "  settings + execpolicy + MCP: skipped (workspace target)"
