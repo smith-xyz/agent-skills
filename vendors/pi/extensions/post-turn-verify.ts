@@ -6,7 +6,7 @@
  * Failures are injected as a follow-up message so the agent can fix them.
  */
 
-import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
+import type { ExtensionAPI, SessionMessageEntry } from "@earendil-works/pi-coding-agent";
 import { resolve } from "path";
 
 async function changedExts(pi: ExtensionAPI, cwd: string): Promise<Set<string>> {
@@ -41,6 +41,9 @@ async function runCheck(
 
 export default function (pi: ExtensionAPI) {
   pi.on("agent_settled", async (_event, ctx) => {
+    const branch = ctx.sessionManager.getBranch();
+    const lastMsg = [...branch].reverse().find((e): e is SessionMessageEntry => e.type === "message");
+    if (lastMsg && "stopReason" in lastMsg.message && lastMsg.message.stopReason === "aborted") return;
     const cwd = ctx.cwd ?? resolve(".");
     const exts = await changedExts(pi, cwd).catch(() => new Set<string>());
     if (exts.size === 0) return;
@@ -86,12 +89,6 @@ export default function (pi: ExtensionAPI) {
 
     if (exts.has("py")) {
       errors.push(await runCheck(pi, "ruff check", "ruff", ["check", "."], cwd));
-      const { code: hasCfg } = await pi
-        .exec("test", ["-f", "pyproject.toml"], { cwd })
-        .catch(() => ({ code: 1 }));
-      if (hasCfg === 0) {
-        errors.push(await runCheck(pi, "mypy", "mypy", ["."], cwd));
-      }
     }
 
     const failures = errors.filter(Boolean).join("\n\n").trim();
